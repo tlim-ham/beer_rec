@@ -9,23 +9,24 @@ import pickle
 import logging
 from functools import lru_cache
 from pathlib import Path
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Supported flavor dimensions the frontend should collect
+# Exact feature columns the model was trained on (order matters for XGBoost)
 # ---------------------------------------------------------------------------
 FLAVOR_DIMS = [
-    "bitter",
-    "sweet",
-    "sour",
-    "salty",
-    "hoppy",
-    "malty",
-    "fruity",
-    "roasted",
-    "spicy",
-    "light",
+    "Body",
+    "Alcohol",
+    "Bitter",
+    "Sweet",
+    "Sour",
+    "Salty",
+    "Fruits",
+    "Hoppy",
+    "Spices",
+    "Malty",
 ]
 
 
@@ -36,8 +37,7 @@ def _load_model(model_path: str):
     if not path.exists():
         raise FileNotFoundError(
             f"Model file not found at '{model_path}'. "
-            "Run models/placeholder_model.py to generate the placeholder, "
-            "or provide your trained model at this path."
+            "Provide your trained model at this path."
         )
     with open(path, "rb") as f:
         model = pickle.load(f)
@@ -45,53 +45,79 @@ def _load_model(model_path: str):
     return model
 
 
+@lru_cache(maxsize=1)
+def _load_encoders(encoders_path: str):
+    """Load and cache the label encoders from disk."""
+    path = Path(encoders_path)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Encoders file not found at '{encoders_path}'. "
+            "Make sure the label encoders are saved alongside the model."
+        )
+    with open(path, "rb") as f:
+        encoders = pickle.load(f)
+    logger.info("Label encoders loaded from %s", encoders_path)
+    return encoders
+
+
 class ModelService:
     """
-    Wraps the pickled classifier and validates inputs/outputs.
-
-    Swap in your real trained model by pointing MODEL_PATH to the new .pkl file.
-    The model object must expose:
-        .predict(flavor_profile: dict) -> list[tuple[str, float]]
-        .get_top_categories(flavor_profile: dict, top_n: int) -> list[str]
+    Wraps the pickled multi-output classifier and validates inputs/outputs.
+    The model predicts both clus_name and Style_simple from flavor profile.
     """
 
-    MODEL_PATH = "models/beer_classifier.pkl"
+    MODEL_PATH = str(Path(__file__).parent.parent / "models" / "beer_multioutput_classifier.pkl")
+    ENCODERS_PATH = str(Path(__file__).parent.parent / "models" / "label_encoders.pkl")
 
-    def __init__(self, model_path: str | None = None):
+    def __init__(self, model_path: str | None = None, encoders_path: str | None = None):
         self._model_path = model_path or self.MODEL_PATH
+        self._encoders_path = encoders_path or self.ENCODERS_PATH
         self._model = _load_model(self._model_path)
+        self._encoders = _load_encoders(self._encoders_path)
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    # def classify(self, flavor_profile: dict, top_n: int = 3) -> dict:
-    #     """
-    #     Returns top predicted clus_names AND Style_simples separately.
-    #     Your real model should output both label types.
-    #     """
-    #     sanitised = self._sanitise(flavor_profile)
-    #     all_scores: list[tuple[str, float]] = self._model.predict(sanitised)
-        
-    #     # Real model should return predictions split by label type.
-    #     # Placeholder splits arbitrarily — replace with actual model output.
-    #     top_clus_names   = [cat for cat, _ in all_scores[:top_n]]
-    #     top_style_simples = [cat for cat, _ in all_scores[:top_n]]
-
-    #     return {
-    #         "clus_name":     top_clus_names,
-    #         "style_simple":  top_style_simples,
-    #         "scores":         dict(all_scores),
-    #         "flavor_profile": sanitised,
-    #     }
     def classify(self, flavor_profile: dict, top_n: int = 3) -> dict:
-        """Temporary hardcoded output for LLM testing — replace when real model arrives."""
+        """
+        Run the classifier on a user's flavor profile.
+
+        Parameters
+        ----------
+        flavor_profile : dict
+            Keys must match FLAVOR_DIMS exactly; values are floats [0, 100].
+        top_n : int
+            Reserved for when probability scores are added.
+
+        Returns
+        -------
+        dict with keys:
+            clus_name     : list[str]  – predicted cluster name
+            Style_simple   : list[str]  – predicted style
+            scores         : dict       – confidence scores (empty for now)
+            flavor_profile : dict       – sanitised input
+        """
+        sanitised = self._sanitise(flavor_profile)
+        features_df = pd.DataFrame([sanitised])
+
+        predictions_encoded = self._model.predict(features_df)
+
+        clus_name_pred = self._encoders['clus_name'].inverse_transform(
+            [predictions_encoded[0][0]]
+        )[0]
+        style_simple_pred = self._encoders['Style_simple'].inverse_transform(
+            [predictions_encoded[0][1]]
+        )[0]
+
+        logger.info("Predicted clus_name=%s style_simple=%s", clus_name_pred, style_simple_pred)
+
         return {
-            "style_simple": ["IPA", "Pale Ale", "Stout"],
-            "clus_names":   ["Hoppy / Dry", "Malty / Smooth"],
-            "scores":       {"IPA": 0.85, "Pale Ale": 0.72, "Stout": 0.61},
-            "flavor_profile": flavor_profile,
-    }
+            "clus_name":    [clus_name_pred],
+            "Style_simple":  [style_simple_pred],
+            "scores":        {},
+            "flavor_profile": sanitised,
+        }
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -99,10 +125,9 @@ class ModelService:
 
     @staticmethod
     def _sanitise(flavor_profile: dict) -> dict:
-        """Clamp values to [0, 1] and drop unknown dimensions."""
+        """Keep only model features and clamp values to [0, 100]."""
         sanitised = {}
         for dim in FLAVOR_DIMS:
-            raw = flavor_profile.get(dim)
-            if raw is not None:
-                sanitised[dim] = max(0.0, min(1.0, float(raw)))
+            raw = flavor_profile.get(dim, 0.0)
+            sanitised[dim] = max(0.0, min(100.0, float(raw)))
         return sanitised
