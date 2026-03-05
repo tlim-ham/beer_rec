@@ -21,6 +21,8 @@ from routes.recommendation import router as recommendation_router
 from dependencies import get_model_service, get_beer_service
 from utils.schemas import HealthResponse
 
+print("API KEY LOADED:", settings.GEMINI_API_KEY[:8], "...")
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -82,7 +84,7 @@ async def health_check():
         beer_svc = get_beer_service()
         beers_in_db = len(beer_svc._beers)
     except Exception:
-        from services.beer_service import _load_beers
+        from beer_backend.services.beer_service import _load_beers
         _load_beers.cache_clear()
         beers_in_db = 0
 
