@@ -43,12 +43,12 @@ class RecommendationPipeline:
 
     def start_recommendation(self, flavor_profile: dict) -> dict:
         classification = self._model.classify(flavor_profile, top_n=3)
-        clus_name    = classification["clus_name"]   # fixed: was "clus_name"
-        style_simple  = classification["style_simple"]
+        clus_name    = classification["clus_name"]  
+        style_simple  = classification["Style_simple"]
 
         beers = self._beers.get_beers_by_categories(
             clus_name=clus_name,
-            style_simple=style_simple,   # fixed: was style_simples
+            style_simple=style_simple, 
         )
         beer_context = self._beers.format_for_prompt(beers)
 
@@ -60,7 +60,7 @@ class RecommendationPipeline:
         return {
             "session_id":      session_id,
             "clus_name":      clus_name,
-            "style_simple":    style_simple,
+            "Style_simple":    style_simple,
             "category_scores": classification["scores"],
             "beers_found":     beers,
             "intro_message":   intro_message,
