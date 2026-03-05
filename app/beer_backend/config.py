@@ -20,12 +20,13 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ #
     # Gemini API
     # ------------------------------------------------------------------ #
-    GEMINI_API_KEY: str = "YOUR_GEMINI_API_KEY_HERE"
+    GEMINI_API_KEY: str = "GEMINI_API_KEY" # REMOVE THIS
 
     # ------------------------------------------------------------------ #
     # File paths
     # ------------------------------------------------------------------ #
-    MODEL_PATH: str = str(BASE_DIR / "models" / "beer_classifier.pkl")
+    MODEL_PATH: str = str(BASE_DIR / "models" / "beer_multioutput_classifier.pkl")
+    ENCODERS_PATH: str = str(BASE_DIR / "models" / "label_encoders.pkl")
     BEER_XLSX_PATH: str = str(BASE_DIR / "data" / "beers.xlsx")
 
     # ------------------------------------------------------------------ #
