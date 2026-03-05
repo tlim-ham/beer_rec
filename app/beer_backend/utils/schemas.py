@@ -12,20 +12,16 @@ from pydantic import BaseModel, Field, field_validator
 # ---------------------------------------------------------------------------
 
 class FlavorProfile(BaseModel):
-    """
-    User's flavor preference vector. Each dimension is a float in [0.0, 1.0]
-    where 0 = dislike / not important and 1 = love / very important.
-    """
-    bitter:  float = Field(default=0.0, ge=0.0, le=1.0)
-    sweet:   float = Field(default=0.0, ge=0.0, le=1.0)
-    sour:    float = Field(default=0.0, ge=0.0, le=1.0)
-    salty:   float = Field(default=0.0, ge=0.0, le=1.0)
-    hoppy:   float = Field(default=0.0, ge=0.0, le=1.0)
-    malty:   float = Field(default=0.0, ge=0.0, le=1.0)
-    fruity:  float = Field(default=0.0, ge=0.0, le=1.0)
-    roasted: float = Field(default=0.0, ge=0.0, le=1.0)
-    spicy:   float = Field(default=0.0, ge=0.0, le=1.0)
-    light:   float = Field(default=0.0, ge=0.0, le=1.0)
+    Body:    float = Field(default=0.0, ge=0.0, le=100.0)
+    Alcohol: float = Field(default=0.0, ge=0.0, le=100.0)
+    Bitter:  float = Field(default=0.0, ge=0.0, le=100.0)
+    Sweet:   float = Field(default=0.0, ge=0.0, le=100.0)
+    Sour:    float = Field(default=0.0, ge=0.0, le=100.0)
+    Salty:   float = Field(default=0.0, ge=0.0, le=100.0)
+    Fruits:  float = Field(default=0.0, ge=0.0, le=100.0)
+    Hoppy:   float = Field(default=0.0, ge=0.0, le=100.0)
+    Spices:  float = Field(default=0.0, ge=0.0, le=100.0)
+    Malty:   float = Field(default=0.0, ge=0.0, le=100.0)
 
 
 class StartRecommendationRequest(BaseModel):
@@ -57,9 +53,9 @@ class BeerItem(BaseModel):
 class StartRecommendationResponse(BaseModel):
     session_id:      str
     clus_name:      list[str]
-    style_simple:   list[str]
+    Style_simple:   list[str]
     category_scores: dict[str, float]
-    beers_found:     list[dict]        # flexible — real columns vary
+    beers_found:     list[dict]
     intro_message:   str
     tokens_used:     int
 
