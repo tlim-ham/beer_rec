@@ -16,7 +16,7 @@ from config import settings
 
 @lru_cache(maxsize=1)
 def get_model_service() -> ModelService:
-    return ModelService(model_path=settings.MODEL_PATH)
+    return ModelService(model_path=settings.MODEL_PATH, encoders_path=settings.ENCODERS_PATH)
 
 
 @lru_cache(maxsize=1)
