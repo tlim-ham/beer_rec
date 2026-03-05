@@ -33,8 +33,8 @@ class BeerService:
     """Queries the static beer XLSX database."""
 
     def __init__(self, xlsx_path: str | None = None):
-        self._csv_path = xlsx_path or XLSX_PATH
-        self._beers = _load_beers(self._csv_path)
+        self._xlsx_path = xlsx_path or XLSX_PATH
+        self._beers = _load_beers(self._xlsx_path)
 
     # ------------------------------------------------------------------
     # Public API
@@ -90,11 +90,18 @@ class BeerService:
 
         lines = []
         for b in beers:
+            ibu_range = f"{b.get('Min.IBU', '?')}-{b.get('Max.IBU', '?')}"
+            flavor_summary = (
+                f"Bitter={b.get('Bitter', 0)}, Sweet={b.get('Sweet', 0)}, "
+                f"Sour={b.get('Sour', 0)}, Hoppy={b.get('Hoppy', 0)}, "
+                f"Malty={b.get('Malty', 0)}, Fruits={b.get('Fruits', 0)}, "
+                f"Spices={b.get('Spices', 0)}"
+            )
             lines.append(
-                f"- {b['name']} by {b['brewery']} "
-                f"({b['style']}, {b['abv']}% ABV, {b['ibu']} IBU): "
-                f"{b['description']} "
-                f"[Flavors: {b['flavor_tags']}]"
+                f"- {b.get('Beer.Name..Full.', b.get('Name', 'Unknown'))} "
+                f"({b.get('Style', '?')}, {b.get('ABV', '?')}% ABV, IBU {ibu_range}): "
+                f"{str(b.get('Description', '')).strip()[:200]} "
+                f"[{flavor_summary}]"
             )
         return "\n".join(lines)
 
