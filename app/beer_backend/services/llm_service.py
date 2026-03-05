@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Cost / quality knobs — tune these as needed
 # ---------------------------------------------------------------------------
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.5-flash-lite"
 MAX_OUTPUT_TOKENS = 512
 MAX_HISTORY_TURNS = 6
 BUDGET_TOKENS_PER_SESSION = 8_000
