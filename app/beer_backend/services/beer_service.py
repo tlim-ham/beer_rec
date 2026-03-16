@@ -98,7 +98,7 @@ class BeerService:
                 f"Spices={b.get('Spices', 0)}"
             )
             lines.append(
-                f"- {b.get('Beer.Name..Full.', b.get('Name', 'Unknown'))} "
+                f"- {str(b.get('Name', 'Unknown'))} "
                 f"({b.get('Style', '?')}, {b.get('ABV', '?')}% ABV, IBU {ibu_range}): "
                 f"{str(b.get('Description', '')).strip()[:200]} "
                 f"[{flavor_summary}]"
