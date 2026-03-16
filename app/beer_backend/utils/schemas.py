@@ -73,6 +73,23 @@ class SessionInfoResponse(BaseModel):
     over_budget: bool
 
 
+class BeerOption(BaseModel):
+    name: str
+    body: float
+    malty: float
+    sour: float
+    fruits: float
+    hoppy: float
+    bitter: float
+    spices: float
+    salty: float
+    sweet: float
+
+
+class BeerListResponse(BaseModel):
+    beers: list[BeerOption]
+
+
 class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
