@@ -1,18 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 
-const BEER_OPTIONS = [
-  { name: "Select a beer…", body: 5, malty: 5, sour: 3, fruits: 4, hoppy: 6, bitter: 5, spices: 2, salty: 1 },
-  { name: "Sierra Nevada Pale Ale", body: 5, malty: 4, sour: 2, fruits: 4, hoppy: 7, bitter: 6, spices: 2, salty: 1 },
-  { name: "Allagash White", body: 4, malty: 4, sour: 3, fruits: 6, hoppy: 3, bitter: 2, spices: 7, salty: 1 },
-  { name: "Guinness Draught", body: 8, malty: 7, sour: 1, fruits: 2, hoppy: 2, bitter: 5, spices: 1, salty: 2 },
-  { name: "Dogfish Head 60 Minute IPA", body: 5, malty: 4, sour: 2, fruits: 5, hoppy: 9, bitter: 8, spices: 2, salty: 1 },
-  { name: "Founders Breakfast Stout", body: 9, malty: 8, sour: 1, fruits: 3, hoppy: 2, bitter: 6, spices: 4, salty: 1 },
-  { name: "Blue Moon", body: 4, malty: 4, sour: 2, fruits: 5, hoppy: 3, bitter: 2, spices: 5, salty: 1 },
-  { name: "Lagunitas IPA", body: 5, malty: 4, sour: 2, fruits: 5, hoppy: 8, bitter: 7, spices: 2, salty: 1 },
-  { name: "Heineken", body: 3, malty: 3, sour: 2, fruits: 2, hoppy: 4, bitter: 3, spices: 1, salty: 1 },
-  { name: "Modelo Especial", body: 3, malty: 3, sour: 1, fruits: 2, hoppy: 3, bitter: 2, spices: 1, salty: 1 },
-];
-
 const VOCABULARY = {
   Body: { def: "Perceived weight or thickness in the mouth.", hint: "Light ↔ full-bodied" },
   Malty: { def: "Grain-derived richness (bready/caramel-like).", hint: "Crackery ↔ caramel/bready" },
@@ -26,12 +13,10 @@ const VOCABULARY = {
   Alcohol: { def: "Strength of alcohol perception in taste/aroma (separate from ABV).", hint: "Hidden ↔ warming/boozy" },
 };
 
-const DEFAULTS = { body: 5, malty: 5, sour: 3, fruits: 4, hoppy: 6, bitter: 5, spices: 2, salty: 1 };
-const TABS = ["Taste", "Matches", "Vocabulary", "Settings"];
+const DEFAULTS = { body: 50, malty: 50, sour: 30, fruits: 40, hoppy: 60, bitter: 50, spices: 20, salty: 10, sweet: 50 };
 
+const API_BASE = "http://localhost:8002";
 
-
-// Slider with flash animation on external change
 function Slider({ label, value, onChange, left, right, flashing }) {
   return (
     <div style={{
@@ -48,7 +33,7 @@ function Slider({ label, value, onChange, left, right, flashing }) {
         <span style={{ fontFamily: "monospace", fontSize: "1rem", color: "#f0c040", fontWeight: "700" }}>{value}</span>
       </div>
       <input
-        type="range" min="1" max="10" step="1" value={value}
+        type="range" min="0" max="100" step="1" value={value}
         onChange={e => onChange(Number(e.target.value))}
         style={{ width: "100%", accentColor: "#f0c040", cursor: "pointer" }}
       />
@@ -61,12 +46,12 @@ function Slider({ label, value, onChange, left, right, flashing }) {
 }
 
 function TasteBar({ label, value }) {
-  const pct = (value / 10) * 100;
+  const pct = (value / 100) * 100;
   return (
     <div style={{ marginBottom: "0.8rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
         <span style={{ fontSize: "0.85rem", color: "#c4b08a" }}>{label}</span>
-        <span style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "#f0c040" }}>{value.toFixed(1)}/10</span>
+        <span style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "#f0c040" }}>{value.toFixed(1)}/100</span>
       </div>
       <div style={{ background: "#1a1208", borderRadius: "4px", height: "6px", overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg, #c8860a, #f0c040)", borderRadius: "4px", transition: "width 0.4s ease" }} />
@@ -87,45 +72,95 @@ function SectionLabel({ children }) {
   );
 }
 
-function PreferencesTab() {
+function InputPage({ onGenerate }) {
   const [vals, setVals] = useState(DEFAULTS);
-  const [selectedBeer, setSelectedBeer] = useState("Select a beer…");
-  const [showResult, setShowResult] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [beerOptions, setBeerOptions] = useState([]);
   const [flashing, setFlashing] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingBeers, setIsLoadingBeers] = useState(true);
   const prevVals = useRef(vals);
 
-  const set = k => v => {
-    setVals(p => ({ ...p, [k]: v }));
-    setShowResult(false);
-  };
+  const filteredBeers = useMemo(() => {
+    if (!search.trim()) return [];
+    return beerOptions
+      .filter(b => b.name.toLowerCase().includes(search.toLowerCase()))
+      .slice(0, 10);
+  }, [search, beerOptions]);
 
-  function handleBeerSelect(e) {
-    const name = e.target.value;
-    setSelectedBeer(name);
-    setShowResult(false);
-    const beer = BEER_OPTIONS.find(b => b.name === name);
-    if (beer && name !== "Select a beer…") {
-      const { body, malty, sour, fruits, hoppy, bitter, spices, salty } = beer;
-      const newVals = { body, malty, sour, fruits, hoppy, bitter, spices, salty };
-      // figure out which keys changed
-      const changed = {};
-      Object.keys(newVals).forEach(k => {
-        if (newVals[k] !== prevVals.current[k]) changed[k] = true;
-      });
-      setFlashing(changed);
-      setVals(newVals);
-      setTimeout(() => setFlashing({}), 800);
+  useEffect(() => {
+    async function fetchBeers() {
+      try {
+        const response = await fetch(`${API_BASE}/api/v1/beers`);
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        const data = await response.json();
+        setBeerOptions(data.beers);
+      } catch (error) {
+        console.error('Error fetching beers:', error);
+      } finally {
+        setIsLoadingBeers(false);
+      }
     }
+    fetchBeers();
+  }, []);
+
+  const set = k => v => setVals(p => ({ ...p, [k]: v }));
+
+  function handleBeerSelect(beer) {
+    setSearch(beer.name);
+    setShowDropdown(false);
+    const { body, malty, sour, fruits, hoppy, bitter, spices, salty } = beer;
+    const newVals = { body, malty, sour, fruits, hoppy, bitter, spices, salty, sweet: vals.sweet };
+    const changed = {};
+    Object.keys(newVals).forEach(k => {
+      if (newVals[k] !== prevVals.current[k]) changed[k] = true;
+    });
+    setFlashing(changed);
+    setVals(newVals);
+    setTimeout(() => setFlashing({}), 800);
   }
 
   useEffect(() => { prevVals.current = vals; }, [vals]);
 
   function handleReset() {
     setVals(DEFAULTS);
-    setSelectedBeer("Select a beer…");
-    setShowResult(false);
+    setSearch("");
     setFlashing(Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, true])));
     setTimeout(() => setFlashing({}), 800);
+  }
+
+  async function handleGenerate() {
+    setIsLoading(true);
+    try {
+      const flavorProfile = {
+        Body: vals.body,
+        Alcohol: vals.body,
+        Bitter: vals.bitter,
+        Sweet: vals.sweet,
+        Sour: vals.sour,
+        Salty: vals.salty,
+        Fruits: vals.fruits,
+        Hoppy: vals.hoppy,
+        Spices: vals.spices,
+        Malty: vals.malty,
+      };
+
+      const response = await fetch(`${API_BASE}/api/v1/recommend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flavor_profile: flavorProfile }),
+      });
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      onGenerate(data.session_id, data.intro_message);
+    } catch (error) {
+      console.error('Error generating recommendations:', error);
+      alert('Failed to generate recommendations. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -135,21 +170,72 @@ function PreferencesTab() {
       <div>
         <SectionLabel>Start with a beer you already enjoy</SectionLabel>
         <p style={{ color: "#8a7a5a", fontSize: "0.82rem", marginBottom: "0.8rem", fontStyle: "italic" }}>
-          Pick a beer and we'll pre-fill your preferences. Fine-tune the sliders below.
+          Search for a beer and we'll pre-fill your preferences. Fine-tune the sliders below.
         </p>
+
         <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1.8rem" }}>
-          <select
-            value={selectedBeer}
-            onChange={handleBeerSelect}
-            style={{
-              flex: 1, background: "#1a1208", border: "1px solid #3a2e18",
-              color: selectedBeer === "Select a beer…" ? "#8a7a5a" : "#e8d5a3",
-              padding: "0.75rem 1rem", borderRadius: "8px", fontSize: "0.95rem",
-              cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            {BEER_OPTIONS.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
-          </select>
+          {/* Search input + dropdown */}
+          <div style={{ position: "relative", flex: 1 }}>
+            <input
+              type="text"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setShowDropdown(true); }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+              placeholder={isLoadingBeers ? "Loading beers..." : "Search for a beer..."}
+              disabled={isLoadingBeers}
+              style={{
+                width: "100%",
+                background: "#1a1208",
+                border: "1px solid #3a2e18",
+                color: "#e8d5a3",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                fontSize: "0.95rem",
+                fontFamily: "inherit",
+                boxSizing: "border-box",
+                outline: "none",
+                opacity: isLoadingBeers ? 0.6 : 1,
+                cursor: isLoadingBeers ? "not-allowed" : "text",
+              }}
+            />
+            {showDropdown && filteredBeers.length > 0 && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                background: "#1a1208",
+                border: "1px solid #3a2e18",
+                borderRadius: "8px",
+                marginTop: "0.25rem",
+                zIndex: 100,
+                maxHeight: "250px",
+                overflowY: "auto",
+              }}>
+                {filteredBeers.map(beer => (
+                  <div
+                    key={beer.name}
+                    onMouseDown={() => handleBeerSelect(beer)}
+                    style={{
+                      padding: "0.75rem 1rem",
+                      cursor: "pointer",
+                      color: "#e8d5a3",
+                      fontSize: "0.9rem",
+                      borderBottom: "1px solid #2a2010",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = "#2a2010"}
+                    onMouseOut={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    {beer.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Reset button */}
           <button
             onClick={handleReset}
             title="Reset to defaults"
@@ -170,6 +256,7 @@ function PreferencesTab() {
         <SectionLabel>Richness</SectionLabel>
         <Slider label="Body" value={vals.body} onChange={set("body")} left="Light" right="Thick" flashing={flashing.body} />
         <Slider label="Malty" value={vals.malty} onChange={set("malty")} left="Dry" right="Grainy" flashing={flashing.malty} />
+        <Slider label="Sweet" value={vals.sweet} onChange={set("sweet")} left="Dry" right="Sweet" flashing={flashing.sweet} />
 
         <SectionLabel>Brightness</SectionLabel>
         <Slider label="Sour" value={vals.sour} onChange={set("sour")} left="Not tart" right="Very tart" flashing={flashing.sour} />
@@ -199,75 +286,176 @@ function PreferencesTab() {
         </p>
 
         <button
-          onClick={() => setShowResult(true)}
+          onClick={handleGenerate}
+          disabled={isLoading}
           style={{
             width: "100%", padding: "1.1rem", background: "linear-gradient(135deg, #c8860a, #f0c040)",
             border: "none", borderRadius: "10px", color: "#0a0600", fontWeight: "800",
-            fontSize: "1.05rem", cursor: "pointer", letterSpacing: "0.04em",
+            fontSize: "1.05rem", cursor: isLoading ? "not-allowed" : "pointer", letterSpacing: "0.04em",
             fontFamily: "'Playfair Display', serif",
             boxShadow: "0 4px 24px rgba(240,192,64,0.3)",
             transition: "opacity 0.2s",
+            opacity: isLoading ? 0.7 : 1,
           }}
-          onMouseOver={e => e.currentTarget.style.opacity = "0.85"}
-          onMouseOut={e => e.currentTarget.style.opacity = "1"}
+          onMouseOver={e => !isLoading && (e.currentTarget.style.opacity = "0.85")}
+          onMouseOut={e => !isLoading && (e.currentTarget.style.opacity = "1")}
         >
-          Get My Beer Recommendations →
+          {isLoading ? "Generating Recommendations..." : "Generate Recommendations →"}
         </button>
-
-        {showResult && (
-          <div style={{ marginTop: "1.2rem", padding: "1.2rem", background: "#1a1208", borderRadius: "10px", border: "1px solid #3a2e18" }}>
-            <p style={{ color: "#8a7a5a", fontSize: "0.82rem", textAlign: "center", fontStyle: "italic", margin: 0 }}>
-              Recommendation engine coming soon — connect your backend to see results here!
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
-function MatchesTab() {
-  const placeholders = [
-    { name: "Beer Recommendation A", style: "Hoppy Pale Ale", match: "94% match", tags: ["hoppy", "bitter", "citrusy"] },
-    { name: "Beer Recommendation B", style: "Wheat Ale", match: "88% match", tags: ["fruity", "spiced", "light"] },
-    { name: "Beer Recommendation C", style: "Amber Lager", match: "81% match", tags: ["malty", "smooth", "medium body"] },
-  ];
+function ChatPage({ sessionId, initialMessage, onBack }) {
+  const [messages, setMessages] = useState([{ role: 'assistant', content: initialMessage }]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  async function handleSendMessage() {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage = inputMessage.trim();
+    setInputMessage('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, message: userMessage }),
+      });
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.'
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }
+
   return (
-    <div>
-      <p style={{ color: "#8a7a5a", fontSize: "0.85rem", marginBottom: "2rem", fontStyle: "italic" }}>
-        Set your preferences on the Taste tab, then hit "Get My Beer Recommendations" to see your matches here.
-      </p>
-      {placeholders.map((b, i) => (
-        <div key={b.name} style={{
-          display: "flex", alignItems: "center", gap: "1.4rem",
-          padding: "1.3rem 1.6rem", background: "#0e0b04",
-          border: "1px solid #2a2010", borderRadius: "10px", marginBottom: "0.8rem",
-        }}>
-          <span style={{ fontSize: "1.6rem", color: "#f0c040", fontFamily: "monospace", fontWeight: "700", minWidth: "2.5rem" }}>
-            {String(i + 1).padStart(2, "0")}
-          </span>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "0.8rem", marginBottom: "0.3rem" }}>
-              <span style={{ color: "#e8d5a3", fontFamily: "'Playfair Display', serif", fontSize: "1.05rem" }}>{b.name}</span>
-              <span style={{ color: "#6a5a3a", fontSize: "0.75rem" }}>{b.style}</span>
-            </div>
-            <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-              {b.tags.map(tag => (
-                <span key={tag} style={{
-                  padding: "0.15rem 0.5rem", background: "#1a1208",
-                  border: "1px solid #2a2010", borderRadius: "20px",
-                  fontSize: "0.7rem", color: "#8a7a5a",
-                }}>{tag}</span>
-              ))}
+    <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+      {/* Header */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem",
+        padding: "1rem", background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "10px"
+      }}>
+        <button
+          onClick={onBack}
+          style={{
+            padding: "0.5rem 1rem", background: "none", border: "1px solid #3a2e18",
+            borderRadius: "6px", color: "#6a5a3a", cursor: "pointer",
+            fontSize: "0.9rem", fontFamily: "inherit",
+          }}
+          onMouseOver={e => e.currentTarget.style.color = "#f0c040"}
+          onMouseOut={e => e.currentTarget.style.color = "#6a5a3a"}
+        >
+          ← Back to Input
+        </button>
+        <div>
+          <h2 style={{ margin: 0, color: "#f0c040", fontFamily: "'Playfair Display', serif", fontSize: "1.5rem" }}>
+            Beer Recommendations Chat
+          </h2>
+          <p style={{ margin: "0.25rem 0 0 0", color: "#8a7a5a", fontSize: "0.85rem" }}>
+            Ask questions about your beer recommendations!
+          </p>
+        </div>
+      </div>
+
+      {/* Chat Messages */}
+      <div style={{
+        height: "60vh", overflowY: "auto", padding: "1rem",
+        background: "#0e0b04", border: "1px solid #2a2010",
+        borderRadius: "10px", marginBottom: "1rem"
+      }}>
+        {messages.map((message, index) => (
+          <div key={index} style={{
+            marginBottom: "1.5rem", display: "flex",
+            justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start'
+          }}>
+            <div style={{
+              maxWidth: "70%", padding: "1rem 1.2rem",
+              background: message.role === 'user' ? "#f0c040" : "#1a1208",
+              color: message.role === 'user' ? "#0a0600" : "#e8d5a3",
+              borderRadius: "15px",
+              border: message.role === 'user' ? "none" : "1px solid #2a2010",
+              fontSize: "0.95rem", lineHeight: 1.5, whiteSpace: "pre-wrap"
+            }}>
+              {message.content}
             </div>
           </div>
-          <span style={{ color: "#f0c040", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "700" }}>{b.match}</span>
-        </div>
-      ))}
-      <div style={{ marginTop: "1.5rem", padding: "1rem 1.2rem", background: "#1a1208", borderRadius: "10px", border: "1px solid #2a2010" }}>
-        <p style={{ color: "#6a5a3a", fontSize: "0.78rem", fontStyle: "italic", margin: 0 }}>
-          Matches are ranked by nearest-neighbor similarity across all flavor dimensions. Connect your backend to replace these placeholders with real results.
-        </p>
+        ))}
+        {isLoading && (
+          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "1.5rem" }}>
+            <div style={{
+              padding: "1rem 1.2rem", background: "#1a1208",
+              border: "1px solid #2a2010", borderRadius: "15px",
+              color: "#8a7a5a", fontSize: "0.95rem"
+            }}>
+              Thinking...
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div style={{
+        display: "flex", gap: "0.5rem", padding: "1rem",
+        background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "10px"
+      }}>
+        <textarea
+          value={inputMessage}
+          onChange={e => setInputMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ask about your beer recommendations..."
+          style={{
+            flex: 1, minHeight: "50px", maxHeight: "120px",
+            background: "#1a1208", border: "1px solid #3a2e18",
+            borderRadius: "8px", color: "#e8d5a3", padding: "0.75rem",
+            fontSize: "0.95rem", fontFamily: "inherit", resize: "vertical", outline: "none"
+          }}
+          disabled={isLoading}
+        />
+        <button
+          onClick={handleSendMessage}
+          disabled={!inputMessage.trim() || isLoading}
+          style={{
+            padding: "0.75rem 1.5rem",
+            background: isLoading || !inputMessage.trim() ? "#2a2010" : "linear-gradient(135deg, #c8860a, #f0c040)",
+            border: "none", borderRadius: "8px",
+            color: isLoading || !inputMessage.trim() ? "#6a5a3a" : "#0a0600",
+            fontWeight: "600",
+            cursor: isLoading || !inputMessage.trim() ? "not-allowed" : "pointer",
+            fontSize: "0.95rem", fontFamily: "inherit", alignSelf: "flex-end"
+          }}
+        >
+          {isLoading ? "..." : "Send"}
+        </button>
       </div>
     </div>
   );
@@ -311,37 +499,6 @@ function VocabularyTab() {
   );
 }
 
-function SettingsTab() {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-
-  return (
-    <div style={{ maxWidth: "520px", paddingTop: "1rem" }}>
-      <SectionLabel>Display</SectionLabel>
-      <SettingRow
-        label="Dark mode"
-        description="Use dark background theme"
-        value={darkMode}
-        onChange={setDarkMode}
-      />
-
-      <SectionLabel>Sliders</SectionLabel>
-      <SettingRow
-        label="Show advanced sliders"
-        description="Reveal Astringency and Alcohol sliders on the Taste tab"
-        value={showAdvanced}
-        onChange={setShowAdvanced}
-      />
-
-      <div style={{ marginTop: "2rem", padding: "1rem", background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "10px" }}>
-        <p style={{ color: "#6a5a3a", fontSize: "0.78rem", fontStyle: "italic", margin: 0 }}>
-          Settings are not yet persisted — they'll reset on page refresh. Backend connection coming soon.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function SettingRow({ label, description, value, onChange }) {
   return (
     <div style={{
@@ -373,20 +530,57 @@ function SettingRow({ label, description, value, onChange }) {
   );
 }
 
+function SettingsTab() {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+
+  return (
+    <div style={{ maxWidth: "520px", paddingTop: "1rem" }}>
+      <SectionLabel>Display</SectionLabel>
+      <SettingRow
+        label="Dark mode"
+        description="Use dark background theme"
+        value={darkMode}
+        onChange={setDarkMode}
+      />
+      <SectionLabel>Sliders</SectionLabel>
+      <SettingRow
+        label="Show advanced sliders"
+        description="Reveal Astringency and Alcohol sliders on the Taste tab"
+        value={showAdvanced}
+        onChange={setShowAdvanced}
+      />
+      <div style={{ marginTop: "2rem", padding: "1rem", background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "10px" }}>
+        <p style={{ color: "#6a5a3a", fontSize: "0.78rem", fontStyle: "italic", margin: 0 }}>
+          Settings are not yet persisted — they'll reset on page refresh.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const [tab, setTab] = useState("Taste");
+  const [page, setPage] = useState("input");
+  const [chatData, setChatData] = useState(null);
+
+  function handleGenerate(sessionId, llmMessage) {
+    setChatData({ sessionId, initialMessage: llmMessage });
+    setPage("chat");
+  }
+
+  function handleBackToInput() {
+    setPage("input");
+    setChatData(null);
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#080501", fontFamily: "'DM Sans', sans-serif", color: "#e8d5a3" }}>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 
       <header style={{
-        padding: "1rem 3rem",
-        borderBottom: "1px solid #2a2010",
-        background: "rgba(8,5,1,0.97)",
-        position: "sticky", top: 0, zIndex: 100,
-        backdropFilter: "blur(8px)",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "1rem 3rem", borderBottom: "1px solid #2a2010",
+        background: "rgba(8,5,1,0.97)", position: "sticky", top: 0, zIndex: 100,
+        backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
           <div style={{
@@ -394,7 +588,7 @@ export default function App() {
             borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center",
             color: "#4a3e28", fontSize: "0.55rem", letterSpacing: "0.05em", textAlign: "center", lineHeight: 1.4,
           }}>
-            LOGO<br />HERE
+            🍺
           </div>
           <div>
             <h1 style={{
@@ -408,33 +602,17 @@ export default function App() {
             </p>
           </div>
         </div>
-
-        <nav style={{ display: "flex", gap: "0.25rem" }}>
-          {TABS.map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              style={{
-                padding: "0.5rem 1.1rem",
-                background: tab === t ? "#1a1208" : "none",
-                border: tab === t ? "1px solid #3a2e18" : "1px solid transparent",
-                borderRadius: "6px", cursor: "pointer",
-                color: tab === t ? "#f0c040" : "#6a5a3a",
-                fontSize: "0.8rem", letterSpacing: "0.08em", textTransform: "uppercase",
-                fontWeight: "600", fontFamily: "inherit", transition: "color 0.2s",
-              }}
-            >
-              {t}
-            </button>
-          ))}
-        </nav>
       </header>
 
       <main style={{ padding: "2.5rem 3rem 4rem" }}>
-        {tab === "Taste" && <PreferencesTab />}
-        {tab === "Matches" && <MatchesTab />}
-        {tab === "Vocabulary" && <VocabularyTab />}
-        {tab === "Settings" && <SettingsTab />}
+        {page === "input" && <InputPage onGenerate={handleGenerate} />}
+        {page === "chat" && chatData && (
+          <ChatPage
+            sessionId={chatData.sessionId}
+            initialMessage={chatData.initialMessage}
+            onBack={handleBackToInput}
+          />
+        )}
       </main>
     </div>
   );
