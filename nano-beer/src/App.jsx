@@ -9,6 +9,7 @@ const VOCABULARY = {
   Bitter: { def: "Bitterness, usually from hops or roasted ingredients.", hint: "Mild ↔ sharp bitterness" },
   Spices: { def: "Spice-like notes from ingredients or yeast.", hint: "None ↔ clove/pepper/coriander" },
   Salty: { def: "Saltiness (rare; present in styles like Gose).", hint: "None ↔ noticeably saline" },
+  Sweet: { def: "Residual sweetness from unfermented sugars.", hint: "Dry ↔ sweet" },
   Astringency: { def: "Dryness/puckering sensation (often tannins or roasted grains).", hint: "Soft ↔ drying/puckering" },
   Alcohol: { def: "Strength of alcohol perception in taste/aroma (separate from ABV).", hint: "Hidden ↔ warming/boozy" },
 };
@@ -18,6 +19,9 @@ const DEFAULTS = { body: 50, malty: 50, sour: 30, fruits: 40, hoppy: 60, bitter:
 const API_BASE = "http://localhost:8002";
 
 function Slider({ label, value, onChange, left, right, flashing }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const vocabEntry = VOCABULARY[label] || { def: "", hint: "" };
+
   return (
     <div style={{
       marginBottom: "1.4rem",
@@ -25,10 +29,52 @@ function Slider({ label, value, onChange, left, right, flashing }) {
       padding: "0.5rem 0.6rem",
       background: flashing ? "rgba(240,192,64,0.07)" : "transparent",
       transition: "background 0.6s ease",
+      position: "relative",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", alignItems: "center" }}>
-        <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.95rem", color: "#e8d5a3" }}>
-          {label}
+        <span 
+          style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.95rem", color: "#e8d5a3", cursor: "help", position: "relative" }}
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          {label} <span style={{ fontSize: "0.7rem", color: "#8a7a5a", marginLeft: "0.3rem" }}>?</span>
+          
+          {/* Tooltip */}
+          {showTooltip && (
+            <div style={{
+              position: "absolute",
+              bottom: "100%",
+              left: 0,
+              right: 0,
+              background: "#1a1208",
+              border: "1px solid #3a2e18",
+              borderRadius: "8px",
+              padding: "0.75rem",
+              marginBottom: "0.5rem",
+              fontSize: "0.8rem",
+              lineHeight: 1.4,
+              color: "#e8d5a3",
+              whiteSpace: "normal",
+              zIndex: 1000,
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
+              pointerEvents: "none",
+              minWidth: "180px",
+            }}>
+              <div style={{ color: "#f0c040", fontWeight: "600", marginBottom: "0.3rem" }}>{vocabEntry.def}</div>
+              <div style={{ color: "#8a7a5a", fontSize: "0.75rem", fontStyle: "italic" }}>{vocabEntry.hint}</div>
+              {/* Arrow pointing down */}
+              <div style={{
+                position: "absolute",
+                bottom: "-6px",
+                left: "10px",
+                width: 0,
+                height: 0,
+                borderLeft: "6px solid transparent",
+                borderRight: "6px solid transparent",
+                borderTop: "6px solid #1a1208",
+              }} />
+            </div>
+          )}
         </span>
         <span style={{ fontFamily: "monospace", fontSize: "1rem", color: "#f0c040", fontWeight: "700" }}>{value}</span>
       </div>
@@ -563,14 +609,42 @@ export default function App() {
   const [page, setPage] = useState("input");
   const [chatData, setChatData] = useState(null);
 
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && event.state.page) {
+        setPage(event.state.page);
+        setChatData(event.state.chatData || null);
+      } else {
+        // Default to input page if no state
+        setPage("input");
+        setChatData(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   function handleGenerate(sessionId, llmMessage) {
-    setChatData({ sessionId, initialMessage: llmMessage });
+    const newChatData = { sessionId, initialMessage: llmMessage };
+    setChatData(newChatData);
     setPage("chat");
+    
+    // Push state to browser history
+    window.history.pushState(
+      { page: "chat", chatData: newChatData },
+      "",
+      window.location.href
+    );
   }
 
   function handleBackToInput() {
     setPage("input");
     setChatData(null);
+    
+    // Go back in browser history
+    window.history.back();
   }
 
   return (
