@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from beer_backend.services.recommendation_pipeline import RecommendationPipeline
 from beer_backend.services.beer_service import BeerService
+from beer_backend.services.llm_service import RateLimitError, BudgetExceededError
 from beer_backend.utils.schemas import (
     StartRecommendationRequest,
     StartRecommendationResponse,
@@ -40,6 +41,10 @@ async def start_recommendation(
         result = pipeline.start_recommendation(
             flavor_profile=body.flavor_profile.model_dump(),
         )
+    except RateLimitError as e:
+        raise HTTPException(status_code=429, detail=str(e))
+    except BudgetExceededError as e:
+        raise HTTPException(status_code=402, detail=str(e))
     except FileNotFoundError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
@@ -62,6 +67,10 @@ async def chat(
             session_id=body.session_id,
             user_message=body.message,
         )
+    except RateLimitError as e:
+        raise HTTPException(status_code=429, detail=str(e))
+    except BudgetExceededError as e:
+        raise HTTPException(status_code=402, detail=str(e))
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

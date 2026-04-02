@@ -16,6 +16,7 @@ import os
 from dataclasses import dataclass, field
 
 import google.generativeai as genai
+from google.api_core import exceptions as api_exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,10 @@ class ChatSession:
 
 class BudgetExceededError(Exception):
     """Raised when a session has consumed its token budget."""
+
+
+class RateLimitError(Exception):
+    """Raised when Gemini API rate limit is exceeded."""
 
 
 class LLMService:
@@ -133,7 +138,17 @@ class LLMService:
             {"role": "user", "parts": [{"text": new_message}]}
         ]
 
-        response = self._client.generate_content(messages)
+        try:
+            response = self._client.generate_content(messages)
+        except api_exceptions.TooManyRequests as e:
+            logger.error(f"Gemini rate limit exceeded: {e}")
+            raise RateLimitError(
+                "The AI service is temporarily overloaded. "
+                "Please wait a moment and try again."
+            )
+        except Exception as e:
+            logger.error(f"Unexpected Gemini error: {e}")
+            raise
 
         text = response.text or ""
         # Remove markdown bold formatting (**text** -> text)

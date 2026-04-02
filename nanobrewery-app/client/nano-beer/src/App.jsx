@@ -198,6 +198,12 @@ function InputPage({ onGenerate }) {
         body: JSON.stringify({ flavor_profile: flavorProfile }),
       });
 
+      if (response.status === 429) {
+        const error = await response.json();
+        alert(`⏳ ${error.detail}\n\nTake a breath and try again in a moment!`);
+        return;
+      }
+
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
       onGenerate(data.session_id, data.intro_message);
@@ -381,6 +387,16 @@ function ChatPage({ sessionId, initialMessage, onBack }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, message: userMessage }),
       });
+
+      if (response.status === 429) {
+        // Rate limit error
+        const error = await response.json();
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `⏳ ${error.detail}\n\nTake a breath and try again in a moment!`
+        }]);
+        return;
+      }
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
