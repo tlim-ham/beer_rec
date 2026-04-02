@@ -455,6 +455,7 @@ function ChatPage({ sessionId, initialMessage, onBack }) {
             </div>
           </div>
         ))}
+
         {isLoading && (
           <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "1.5rem" }}>
             <div style={{
