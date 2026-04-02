@@ -93,8 +93,9 @@ class LLMService:
         intro_user_message = (
             "Here is a list of beers that match my flavour profile:\n\n"
             f"{beer_context}\n\n"
-            "Please introduce yourself briefly and give me a 2-3 sentence "
-            "summary of these beers based on my preference."
+            "Please introduce yourself briefly (1-2 sentences). Do NOT list the beers. "
+            "I will show them to the user separately. Just greet them and let them know "
+            "you're ready to help them explore these beers."
         )
 
         response_text, tokens = self._call_gemini(session, intro_user_message)

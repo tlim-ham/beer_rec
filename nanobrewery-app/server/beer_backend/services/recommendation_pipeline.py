@@ -57,13 +57,17 @@ class RecommendationPipeline:
         self._sessions[session_id] = session
         intro_message = session.history[-1]["parts"][0]["text"]  # fixed: extract text from dict
 
+        # Append beer list to intro message
+        beer_names = "\n".join([f"{i+1}. {beer.get('Name', 'Unknown')}" for i, beer in enumerate(beers[:10])])
+        intro_with_beers = f"{intro_message}\n\nYour recommended beers:\n{beer_names}"
+
         return {
             "session_id":      session_id,
             "clus_name":      clus_name,
             "Style_simple":    style_simple,
             "category_scores": classification["scores"],
             "beers_found":     beers,
-            "intro_message":   intro_message,
+            "intro_message":   intro_with_beers,
             "tokens_used":     session.tokens_used,
         }
 
