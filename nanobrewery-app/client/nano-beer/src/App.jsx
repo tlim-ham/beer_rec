@@ -314,11 +314,11 @@ function InputPage({ onGenerate }) {
         <Slider label="Sour" value={vals.sour} onChange={set("sour")} left="Not tart" right="Very tart" flashing={flashing.sour} />
         <Slider label="Fruity" value={vals.fruits} onChange={set("fruits")} left="Not fruity" right="Very fruity" flashing={flashing.fruits} />
 
-        <SectionLabel>Hop Character</SectionLabel>
+        <SectionLabel>Hop</SectionLabel>
         <Slider label="Hoppy" value={vals.hoppy} onChange={set("hoppy")} left="Low" right="High" flashing={flashing.hoppy} />
         <Slider label="Bitter" value={vals.bitter} onChange={set("bitter")} left="Low" right="High" flashing={flashing.bitter} />
 
-        <SectionLabel>Edge Notes</SectionLabel>
+        <SectionLabel>Edge</SectionLabel>
         <Slider label="Spices" value={vals.spices} onChange={set("spices")} left="None" right="Spiced" flashing={flashing.spices} />
         <Slider label="Salty" value={vals.salty} onChange={set("salty")} left="None" right="Salty" flashing={flashing.salty} />
       </div>
@@ -330,7 +330,7 @@ function InputPage({ onGenerate }) {
           <TasteBar label="Richness" value={(vals.body + vals.malty) / 2} />
           <TasteBar label="Brightness" value={(vals.sour + vals.fruits) / 2} />
           <TasteBar label="Hops" value={(vals.hoppy + vals.bitter) / 2} />
-          <TasteBar label="Edge Notes" value={(vals.spices + vals.salty) / 2} />
+          <TasteBar label="Edge" value={(vals.spices + vals.salty) / 2} />
         </div>
 
         <p style={{ color: "#6a5a3a", fontSize: "0.78rem", fontStyle: "italic", marginBottom: "1.2rem", lineHeight: 1.5 }}>
