@@ -13,7 +13,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-XLSX_PATH = str(Path(__file__).parent.parent / "data" / "beers.xlsx")
+XLSX_PATH = str(Path(__file__).parent.parent.parent.parent / "data" / "Beer_data (1).xlsx")
 MAX_BEERS_PER_RECOMMENDATION = 10  # cap before sending to LLM
 
 
@@ -98,7 +98,7 @@ class BeerService:
                 f"Spices={b.get('Spices', 0)}"
             )
             lines.append(
-                f"- {str(b.get('Name', 'Unknown'))} "
+                f"- {str(b.get('Name', 'Unknown'))} by {str(b.get('Brewery', 'Unknown Brewery'))} "
                 f"({b.get('Style', '?')}, {b.get('ABV', '?')}% ABV, IBU {ibu_range}): "
                 f"{str(b.get('Description', '')).strip()[:200]} "
                 f"[{flavor_summary}]"
