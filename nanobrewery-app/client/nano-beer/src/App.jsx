@@ -591,7 +591,7 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
           fontStyle: "italic",
           lineHeight: 1.4
         }}>
-          *Hoppy can make mistakes. For the most accurate information, please double-check with brewery staff or official sources.*
+          Hoppy can make mistakes. For the most accurate information, please double-check with official sources.
         </p>
       </div>
     </div>
