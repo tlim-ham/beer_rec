@@ -13,6 +13,50 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+# Encoding fix mapping for common character issues
+ENCODING_FIXES = {
+    '√§': 'ä', '√º': 'u', '√∂': 'ö', '√±': 'ñ', '√∏': 'Ø', '√Ω': 'Ω',
+    '√Æ': 'Ä', '√ú': 'Ü', '√ñ': 'Ö', '√ü': 'ü', '√°': '°', '√©': 'é',
+    '√®': '®', '√™': '™', '√∞': '∞', '√≠': '≠', '√≤': '≤', '√≥': '≥',
+    '√µ': 'µ', '√∫': '∫', '√√': '√', '√∑': '∑', '√∆': '∆', '√∏': '∏',
+    '√π': 'π', '√•': '•', '√…': '…', '√ ': ' ', '√–': '–', '√—': '—',
+    '√"': '"', '√\'': '\'', '√(': '(', '√)': ')', '√[': '[', '√]': ']',
+    '√{': '{', '√}': '}', '√|': '|', '√\\': '\\', '√/': '/', '√?': '?',
+    '√<': '<', '√>': '>', '√=': '=', '√+': '+', '√-': '-', '√*': '*',
+    '√&': '&', '√%': '%', '√$': '$', '√#': '#', '√@': '@', '√!': '!',
+    '√^': '^', '√~': '~', '√`': '`', '≈†': '™', '¬∞': '°', '6¬∞': '6°'
+}
+
+def _fix_encoding(text: str) -> str:
+    """Fix common encoding issues in beer names and brewery names."""
+    if not text:
+        return text
+    
+    # Handle special cases first
+    result = text.replace('Do√ºble', 'Double')  # Special case for "Double"
+    result = result.replace('√º', 'ü')  # Most common case
+    result = result.replace('√∂', 'ö')
+    result = result.replace('√§', 'ä') 
+    result = result.replace('√ú', 'Ü')
+    result = result.replace('√ñ', 'Ö')
+    result = result.replace('√ü', 'ü')
+    result = result.replace('√©', 'é')
+    result = result.replace('√®', 'è')
+    result = result.replace('√≠', 'í')
+    result = result.replace('√±', 'ñ')
+    result = result.replace('√∏', 'Ø')
+    result = result.replace('√Ω', 'Ω')
+    result = result.replace('√Æ', 'Ä')
+    result = result.replace('√°', '°')
+    result = result.replace('√™', '™')
+    result = result.replace('√∞', '∞')
+    result = result.replace('≈†', '™')
+    result = result.replace('¬∞', '°')
+    result = result.replace('6¬∞', '6°')
+    
+    return result
+
+
 XLSX_PATH = str(Path(__file__).parent.parent.parent.parent / "data" / "Beer_data (1).xlsx")
 MAX_BEERS_PER_RECOMMENDATION = 10  # cap before sending to LLM
 
@@ -24,8 +68,15 @@ def _load_beers(xlsx_path: str) -> list[dict]:
     if not path.exists():
         raise FileNotFoundError(f"Beer database not found at '{xlsx_path}'.")
     df = pd.read_excel(path)
+    
+    # Cap flavor values at 100 to prevent model errors
+    flavor_cols = ['Body', 'Alcohol', 'Bitter', 'Sweet', 'Sour', 'Salty', 'Fruits', 'Hoppy', 'Spices', 'Malty']
+    for col in flavor_cols:
+        if col in df.columns:
+            df[col] = df[col].clip(upper=100)
+    
     beers = df.to_dict(orient="records")
-    logger.info("Loaded %d beers from %s", len(beers), xlsx_path)
+    logger.info("Loaded %d beers from %s (flavor values capped at 100)", len(beers), xlsx_path)
     return beers
 
 
@@ -98,7 +149,7 @@ class BeerService:
                 f"Spices={b.get('Spices', 0)}"
             )
             lines.append(
-                f"- {str(b.get('Name', 'Unknown'))} by {str(b.get('Brewery', 'Unknown Brewery'))} "
+                f"- {_fix_encoding(str(b.get('Name', 'Unknown')))} by {_fix_encoding(str(b.get('Brewery', 'Unknown Brewery')))} "
                 f"({b.get('Style', '?')}, {b.get('ABV', '?')}% ABV, IBU {ibu_range}): "
                 f"{str(b.get('Description', '')).strip()[:200]} "
                 f"[{flavor_summary}]"

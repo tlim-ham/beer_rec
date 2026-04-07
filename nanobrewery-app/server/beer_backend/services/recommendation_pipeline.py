@@ -14,7 +14,7 @@ import uuid
 from typing import Optional
 
 from beer_backend.services.model_service import ModelService
-from beer_backend.services.beer_service import BeerService
+from beer_backend.services.beer_service import BeerService, _fix_encoding
 from beer_backend.services.llm_service import LLMService, ChatSession, BudgetExceededError
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class RecommendationPipeline:
         intro_message = session.history[-1]["parts"][0]["text"]  # fixed: extract text from dict
 
         # Append beer list to intro message
-        beer_names = "\n".join([f"{i+1}. {beer.get('Name', 'Unknown')}" for i, beer in enumerate(beers[:10])])
+        beer_names = "\n".join([f"{i+1}. {_fix_encoding(beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])
         intro_with_beers = f"{intro_message}\n\nYour recommended beers:\n{beer_names}"
 
         return {
