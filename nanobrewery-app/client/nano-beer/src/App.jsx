@@ -206,7 +206,8 @@ function InputPage({ onGenerate }) {
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-      onGenerate(data.session_id, data.intro_message);
+      console.log('API response data:', data);
+      onGenerate(data.session_id, data.intro_message, data.suggested_questions);
     } catch (error) {
       console.error('Error generating recommendations:', error);
       alert('Failed to generate recommendations. Please try again.');
@@ -359,7 +360,8 @@ function InputPage({ onGenerate }) {
   );
 }
 
-function ChatPage({ sessionId, initialMessage, onBack }) {
+function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
+  console.log('ChatPage received suggestedQuestions:', suggestedQuestions);
   const [messages, setMessages] = useState([{ role: 'assistant', content: initialMessage }]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -486,6 +488,58 @@ function ChatPage({ sessionId, initialMessage, onBack }) {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Suggested Questions */}
+      {suggestedQuestions && suggestedQuestions.length > 0 && (
+        <div style={{
+          marginBottom: "1rem", padding: "1.5rem",
+          background: "linear-gradient(135deg, #1a1208, #2a2010)", border: "2px solid #f0c040", borderRadius: "15px",
+          boxShadow: "0 4px 16px rgba(240,192,64,0.2)"
+        }}>
+          {console.log('Rendering suggested questions:', suggestedQuestions)}
+          <p style={{
+            margin: "0 0 0.75rem 0", color: "#f0c040", fontSize: "1rem",
+            fontWeight: "600", textAlign: "center"
+          }}>
+            💡 Click a question below to ask Hoppy:
+          </p>
+          <div style={{
+            display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center"
+          }}>
+            {suggestedQuestions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setInputMessage(question);
+                  // Auto-send after a brief delay to show the question in input
+                  setTimeout(() => handleSendMessage(), 100);
+                }}
+                style={{
+                  padding: "0.75rem 1rem", background: "#f0c040",
+                  border: "2px solid #c8860a", borderRadius: "25px",
+                  color: "#0a0600", fontSize: "0.9rem", cursor: "pointer",
+                  fontFamily: "inherit", fontWeight: "600", transition: "all 0.2s ease",
+                  boxShadow: "0 2px 8px rgba(240,192,64,0.3)"
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = "#c8860a";
+                  e.currentTarget.style.borderColor = "#f0c040";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(240,192,64,0.5)";
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = "#f0c040";
+                  e.currentTarget.style.borderColor = "#c8860a";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(240,192,64,0.3)";
+                }}
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div style={{
         display: "flex", gap: "0.5rem", padding: "1rem",
@@ -519,6 +573,26 @@ function ChatPage({ sessionId, initialMessage, onBack }) {
         >
           {isLoading ? "..." : "Send"}
         </button>
+      </div>
+
+      {/* Permanent Disclaimer */}
+      <div style={{
+        marginTop: "1rem",
+        padding: "0.75rem",
+        background: "#0e0b04",
+        border: "1px solid #2a2010",
+        borderRadius: "8px",
+        textAlign: "center"
+      }}>
+        <p style={{
+          margin: 0,
+          color: "#8a7a5a",
+          fontSize: "0.8rem",
+          fontStyle: "italic",
+          lineHeight: 1.4
+        }}>
+          *Hoppy can make mistakes. For the most accurate information, please double-check with brewery staff or official sources.*
+        </p>
       </div>
     </div>
   );
@@ -643,8 +717,9 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  function handleGenerate(sessionId, llmMessage) {
-    const newChatData = { sessionId, initialMessage: llmMessage };
+  function handleGenerate(sessionId, llmMessage, suggestedQuestions) {
+    console.log('handleGenerate called with:', { sessionId, llmMessage, suggestedQuestions });
+    const newChatData = { sessionId, initialMessage: llmMessage, suggestedQuestions };
     setChatData(newChatData);
     setPage("chat");
     
@@ -701,6 +776,7 @@ export default function App() {
           <ChatPage
             sessionId={chatData.sessionId}
             initialMessage={chatData.initialMessage}
+            suggestedQuestions={chatData.suggestedQuestions}
             onBack={handleBackToInput}
           />
         )}

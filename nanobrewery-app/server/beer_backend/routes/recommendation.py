@@ -22,6 +22,12 @@ from beer_backend.dependencies import get_pipeline, get_beer_service
 router = APIRouter(prefix="/api/v1", tags=["recommendations"])
 
 
+@router.options("/recommend")
+async def options_recommend():
+    """Handle CORS preflight requests for /recommend endpoint."""
+    return {"message": "OK"}
+
+
 @router.post(
     "/recommend",
     response_model=StartRecommendationResponse,
@@ -51,6 +57,12 @@ async def start_recommendation(
         raise HTTPException(status_code=500, detail=f"Pipeline error: {e}")
 
     return StartRecommendationResponse(**result)
+
+
+@router.options("/chat")
+async def options_chat():
+    """Handle CORS preflight requests for /chat endpoint."""
+    return {"message": "OK"}
 
 
 @router.post(
@@ -108,6 +120,12 @@ async def end_session(
     found = pipeline.end_session(session_id)
     if not found:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
+
+
+@router.options("/beers")
+async def options_beers():
+    """Handle CORS preflight requests for /beers endpoint."""
+    return {"message": "OK"}
 
 
 @router.get(

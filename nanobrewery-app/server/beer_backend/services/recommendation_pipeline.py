@@ -61,6 +61,24 @@ class RecommendationPipeline:
         beer_names = "\n".join([f"{i+1}. {_fix_encoding(beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])
         intro_with_beers = f"{intro_message}\n\nYour recommended beers:\n{beer_names}"
 
+        # Generate suggested questions as separate array
+        if len(beers) >= 2:
+            beer1 = _fix_encoding(beers[0].get('Name', 'the first beer'))
+            beer2 = _fix_encoding(beers[1].get('Name', 'the second beer'))
+            suggested_questions = [
+                f"Tell me more about {beer1} - what's its flavor profile?",
+                f"What's the difference between {beer1} and {beer2}?",
+                "Which of these beers would you recommend for a beginner?",
+                f"What food would pair well with {beer1}?",
+                f"Can you explain the brewing style of {beer2}?"
+            ]
+        else:
+            suggested_questions = [
+                "Tell me more about this beer - what's its flavor profile?",
+                "What food would pair well with this beer?",
+                "Can you explain the brewing style?"
+            ]
+
         return {
             "session_id":      session_id,
             "clus_name":      clus_name,
@@ -68,6 +86,7 @@ class RecommendationPipeline:
             "category_scores": classification["scores"],
             "beers_found":     beers,
             "intro_message":   intro_with_beers,
+            "suggested_questions": suggested_questions,
             "tokens_used":     session.tokens_used,
         }
 

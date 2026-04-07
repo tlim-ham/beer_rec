@@ -100,7 +100,7 @@ class LLMService:
             "Here is a list of beers that match my flavour profile:\n\n"
             f"{beer_context}\n\n"
             "Please introduce yourself briefly (1-2 sentences). Do NOT list the beers. "
-            "I will show them to the user separately. Just greet them and let them know "
+            "I will show them to the user separately. Just greet them as one user and let them know "
             "you're ready to help them explore these beers."
         )
 
