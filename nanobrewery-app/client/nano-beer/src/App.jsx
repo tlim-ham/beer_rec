@@ -206,7 +206,6 @@ function InputPage({ onGenerate }) {
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-      console.log('API response data:', data);
       onGenerate(data.session_id, data.intro_message, data.suggested_questions);
     } catch (error) {
       console.error('Error generating recommendations:', error);
@@ -217,7 +216,7 @@ function InputPage({ onGenerate }) {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "3rem", alignItems: "start" }}>
+    <div className="input-page-grid" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "3rem", alignItems: "start" }}>
 
       {/* Left — beer picker + sliders */}
       <div>
@@ -325,7 +324,7 @@ function InputPage({ onGenerate }) {
       </div>
 
       {/* Right — snapshot + CTA */}
-      <div style={{ position: "sticky", top: "90px" }}>
+      <div className="sticky-right" style={{ position: "sticky", top: "90px" }}>
         <SectionLabel>Your taste snapshot</SectionLabel>
         <div style={{ background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "12px", padding: "1.4rem", marginBottom: "1.2rem" }}>
           <TasteBar label="Richness" value={(vals.body + vals.malty) / 2} />
@@ -361,7 +360,6 @@ function InputPage({ onGenerate }) {
 }
 
 function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
-  console.log('ChatPage received suggestedQuestions:', suggestedQuestions);
   const [messages, setMessages] = useState([{ role: 'assistant', content: initialMessage }]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -485,60 +483,52 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
             </div>
           </div>
         )}
+        
+        {/* Suggested Questions - Quick Reply Buttons */}
+        {!isLoading && suggestedQuestions && suggestedQuestions.length > 0 && messages.length === 1 && (
+          <div style={{
+            marginBottom: "1.5rem", display: "flex",
+            justifyContent: "flex-start"
+          }}>
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: "0.5rem", maxWidth: "85%"
+            }}>
+              {suggestedQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setInputMessage(question);
+                    setTimeout(() => handleSendMessage(), 100);
+                  }}
+                  style={{
+                    padding: "0.6rem 0.9rem", background: "#f0c040",
+                    border: "2px solid #c8860a", borderRadius: "20px",
+                    color: "#0a0600", fontSize: "0.85rem", cursor: "pointer",
+                    fontFamily: "inherit", fontWeight: "500", transition: "all 0.2s ease",
+                    boxShadow: "0 2px 6px rgba(240,192,64,0.3)"
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = "#c8860a";
+                    e.currentTarget.style.borderColor = "#f0c040";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(240,192,64,0.5)";
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = "#f0c040";
+                    e.currentTarget.style.borderColor = "#c8860a";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(240,192,64,0.3)";
+                  }}
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
-
-      {/* Suggested Questions */}
-      {suggestedQuestions && suggestedQuestions.length > 0 && (
-        <div style={{
-          marginBottom: "1rem", padding: "1.5rem",
-          background: "linear-gradient(135deg, #1a1208, #2a2010)", border: "2px solid #f0c040", borderRadius: "15px",
-          boxShadow: "0 4px 16px rgba(240,192,64,0.2)"
-        }}>
-          {console.log('Rendering suggested questions:', suggestedQuestions)}
-          <p style={{
-            margin: "0 0 0.75rem 0", color: "#f0c040", fontSize: "1rem",
-            fontWeight: "600", textAlign: "center"
-          }}>
-            💡 Click a question below to ask Hoppy:
-          </p>
-          <div style={{
-            display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center"
-          }}>
-            {suggestedQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setInputMessage(question);
-                  // Auto-send after a brief delay to show the question in input
-                  setTimeout(() => handleSendMessage(), 100);
-                }}
-                style={{
-                  padding: "0.75rem 1rem", background: "#f0c040",
-                  border: "2px solid #c8860a", borderRadius: "25px",
-                  color: "#0a0600", fontSize: "0.9rem", cursor: "pointer",
-                  fontFamily: "inherit", fontWeight: "600", transition: "all 0.2s ease",
-                  boxShadow: "0 2px 8px rgba(240,192,64,0.3)"
-                }}
-                onMouseOver={e => {
-                  e.currentTarget.style.background = "#c8860a";
-                  e.currentTarget.style.borderColor = "#f0c040";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(240,192,64,0.5)";
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.background = "#f0c040";
-                  e.currentTarget.style.borderColor = "#c8860a";
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(240,192,64,0.3)";
-                }}
-              >
-                {question}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Input Area */}
       <div style={{
@@ -718,7 +708,6 @@ export default function App() {
   }, []);
 
   function handleGenerate(sessionId, llmMessage, suggestedQuestions) {
-    console.log('handleGenerate called with:', { sessionId, llmMessage, suggestedQuestions });
     const newChatData = { sessionId, initialMessage: llmMessage, suggestedQuestions };
     setChatData(newChatData);
     setPage("chat");
