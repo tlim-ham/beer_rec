@@ -894,26 +894,29 @@ export default function App() {
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 
       <header style={{
-        padding: "1rem 3rem", borderBottom: "1px solid #2a2010",
+        padding: "2rem 3rem", borderBottom: "1px solid #2a2010",
         background: "rgba(8,5,1,0.97)", position: "sticky", top: 0, zIndex: 100,
         backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-          <div style={{
-            width: "44px", height: "44px", border: "2px dashed #3a2e18",
-            borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#4a3e28", fontSize: "0.55rem", letterSpacing: "0.05em", textAlign: "center", lineHeight: 1.4,
-          }}>
-            🍺
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+          <img
+            src="/beer-logo.png"
+            alt="Beer Logo"
+            style={{
+              width: "100px",
+              height: "100px",
+              borderRadius: "8px",
+              objectFit: "contain",
+            }}
+          />
           <div>
             <h1 style={{
-              fontFamily: "'Playfair Display', serif", fontSize: "1.25rem",
+              fontFamily: "'Playfair Display', serif", fontSize: "2.5rem",
               fontWeight: "900", margin: 0, color: "#f0c040", letterSpacing: "-0.02em",
             }}>
-              Hamilton College Nanobrewery
+              Beer Recommender
             </h1>
-            <p style={{ margin: 0, fontSize: "0.65rem", color: "#6a5a3a", letterSpacing: "0.1em" }}>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "#6a5a3a", letterSpacing: "0.1em" }}>
               TASTE · DISCOVER · ENJOY
             </p>
           </div>
