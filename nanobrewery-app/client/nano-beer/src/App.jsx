@@ -686,9 +686,162 @@ function SettingsTab() {
   );
 }
 
+function DisclaimerModal({ onAccept }) {
+  return (
+    <div style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "rgba(0, 0, 0, 0.7)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 9999,
+      backdropFilter: "blur(4px)"
+    }}>
+      <div style={{
+        background: "#0e0b04",
+        border: "2px solid #3a2e18",
+        borderRadius: "12px",
+        padding: "2rem",
+        maxWidth: "500px",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.8)"
+      }}>
+        <h2 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: "1.8rem",
+          color: "#f0c040",
+          margin: "0 0 1.5rem 0",
+          textAlign: "center"
+        }}>
+          ⚠️ Important Disclaimers
+        </h2>
+
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "1.5rem",
+          marginBottom: "2rem"
+        }}>
+          {/* Age requirement */}
+          <div style={{
+            background: "#1a1208",
+            border: "1px solid #2a2010",
+            borderRadius: "8px",
+            padding: "1rem",
+          }}>
+            <h3 style={{
+              color: "#f0c040",
+              fontSize: "1rem",
+              margin: "0 0 0.5rem 0",
+              fontFamily: "'Playfair Display', serif"
+            }}>
+              🔞 Age Restriction
+            </h3>
+            <p style={{
+              color: "#e8d5a3",
+              fontSize: "0.9rem",
+              lineHeight: 1.5,
+              margin: 0
+            }}>
+              You must be 21 years of age or older to use this application. By accessing this service, you confirm that you meet this age requirement.
+            </p>
+          </div>
+
+          {/* Responsible drinking */}
+          <div style={{
+            background: "#1a1208",
+            border: "1px solid #2a2010",
+            borderRadius: "8px",
+            padding: "1rem",
+          }}>
+            <h3 style={{
+              color: "#f0c040",
+              fontSize: "1rem",
+              margin: "0 0 0.5rem 0",
+              fontFamily: "'Playfair Display', serif"
+            }}>
+              🥤 Drink Responsibly
+            </h3>
+            <p style={{
+              color: "#e8d5a3",
+              fontSize: "0.9rem",
+              lineHeight: 1.5,
+              margin: 0
+            }}>
+              Please drink responsibly. Know your limits, never drink and drive, and always prioritize your health and safety. This tool is for educational purposes only.
+            </p>
+          </div>
+
+          {/* Non-affiliation */}
+          <div style={{
+            background: "#1a1208",
+            border: "1px solid #2a2010",
+            borderRadius: "8px",
+            padding: "1rem",
+          }}>
+            <h3 style={{
+              color: "#f0c040",
+              fontSize: "1rem",
+              margin: "0 0 0.5rem 0",
+              fontFamily: "'Playfair Display', serif"
+            }}>
+              🏫 Non-Affiliation Notice
+            </h3>
+            <p style={{
+              color: "#e8d5a3",
+              fontSize: "0.9rem",
+              lineHeight: 1.5,
+              margin: 0
+            }}>
+              This application is not affiliated with, endorsed by, or associated with Hamilton College. It is an independent project created for educational purposes.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onAccept}
+          style={{
+            width: "100%",
+            padding: "0.75rem 1.5rem",
+            background: "#f0c040",
+            border: "none",
+            borderRadius: "8px",
+            color: "#0a0600",
+            fontSize: "1rem",
+            fontWeight: "700",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            transition: "background 0.2s",
+          }}
+          onMouseOver={e => e.currentTarget.style.background = "#ffd966"}
+          onMouseOut={e => e.currentTarget.style.background = "#f0c040"}
+        >
+          I Understand & Accept
+        </button>
+
+        <p style={{
+          color: "#6a5a3a",
+          fontSize: "0.75rem",
+          textAlign: "center",
+          margin: "1rem 0 0 0",
+          fontStyle: "italic"
+        }}>
+          You must accept these terms to continue
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState("input");
   const [chatData, setChatData] = useState(null);
+  const [disclaimersAccepted, setDisclaimersAccepted] = useState(false);
 
   // Handle browser back button
   useEffect(() => {
@@ -706,6 +859,10 @@ export default function App() {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  function handleAcceptDisclaimers() {
+    setDisclaimersAccepted(true);
+  }
 
   function handleGenerate(sessionId, llmMessage, suggestedQuestions) {
     const newChatData = { sessionId, initialMessage: llmMessage, suggestedQuestions };
@@ -726,6 +883,10 @@ export default function App() {
     
     // Go back in browser history
     window.history.back();
+  }
+
+  if (!disclaimersAccepted) {
+    return <DisclaimerModal onAccept={handleAcceptDisclaimers} />;
   }
 
   return (
