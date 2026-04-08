@@ -914,10 +914,10 @@ export default function App() {
               fontFamily: "'Playfair Display', serif", fontSize: "2.5rem",
               fontWeight: "900", margin: 0, color: "#f0c040", letterSpacing: "-0.02em",
             }}>
-              Beer Recommender
+              Hoppy
             </h1>
             <p style={{ margin: 0, fontSize: "0.9rem", color: "#6a5a3a", letterSpacing: "0.1em" }}>
-              TASTE · DISCOVER · ENJOY
+              Know Your Beer • Enjoy Your Beer
             </p>
           </div>
         </div>
