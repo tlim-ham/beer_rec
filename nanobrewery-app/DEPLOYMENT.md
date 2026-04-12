@@ -10,7 +10,7 @@ This application consists of a React frontend and FastAPI backend that need to b
    - **Name:** beer-recommender-backend
    - **Root Directory:** `server`
    - **Runtime:** Python 3
-   - **Build Command:** Leave empty (Render auto-detects)
+   - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `uvicorn beer_backend.main:app --host 0.0.0.0 --port $PORT`
 
 4. **Environment Variables:**
