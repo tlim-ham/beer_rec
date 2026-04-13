@@ -51,12 +51,31 @@ function Slider({ label, value, onChange, left, right, flashing }) {
             color: COLORS.primary, 
             cursor: "help", 
             position: "relative",
-            fontWeight: "600"
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.8rem"
           }}
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          {label} <span style={{ fontSize: "0.7rem", color: COLORS.textDim, marginLeft: "0.3rem" }}>?</span>
+          {label} 
+          <span style={{ 
+            fontSize: "1.1rem", 
+            color: COLORS.primary,
+            fontWeight: "800",
+            width: "26px",
+            height: "26px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: `2.5px solid ${COLORS.primary}`,
+            borderRadius: "50%",
+            transition: "all 0.2s ease",
+            backgroundColor: "rgba(255,217,102,0.15)",
+            flexShrink: 0,
+            boxShadow: `0 0 12px rgba(255,217,102,0.3)`
+          }}>?</span>
           
           {/* Tooltip */}
           {showTooltip && (
