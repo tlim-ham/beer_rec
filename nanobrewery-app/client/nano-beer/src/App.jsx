@@ -43,15 +43,15 @@ function Slider({ label, value, onChange, left, right, flashing }) {
       transition: "background 0.6s ease",
       position: "relative",
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.6rem", alignItems: "center" }}>
         <span 
           style={{ 
             fontFamily: "'DM Sans', sans-serif", 
-            fontSize: "0.95rem", 
+            fontSize: "1.15rem", 
             color: COLORS.primary, 
             cursor: "help", 
             position: "relative",
-            fontWeight: "600",
+            fontWeight: "700",
             display: "flex",
             alignItems: "center",
             gap: "0.8rem"
@@ -114,16 +114,16 @@ function Slider({ label, value, onChange, left, right, flashing }) {
             </div>
           )}
         </span>
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1rem", color: COLORS.primary, fontWeight: "700" }}>{value}</span>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1.3rem", color: COLORS.primary, fontWeight: "800" }}>{value}</span>
       </div>
       <input
         type="range" min="0" max="100" step="1" value={value}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: COLORS.primary, cursor: "pointer" }}
+        style={{ width: "100%", accentColor: COLORS.primary, cursor: "pointer", height: "8px" }}
       />
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.2rem" }}>
-        <span style={{ fontSize: "0.7rem", color: COLORS.textDim, fontFamily: "'DM Sans', sans-serif" }}>{left}</span>
-        <span style={{ fontSize: "0.7rem", color: COLORS.textDim, fontFamily: "'DM Sans', sans-serif" }}>{right}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem" }}>
+        <span style={{ fontSize: "0.85rem", color: COLORS.textMuted, fontFamily: "'DM Sans', sans-serif", fontWeight: "500" }}>{left}</span>
+        <span style={{ fontSize: "0.85rem", color: COLORS.textMuted, fontFamily: "'DM Sans', sans-serif", fontWeight: "500" }}>{right}</span>
       </div>
     </div>
   );
