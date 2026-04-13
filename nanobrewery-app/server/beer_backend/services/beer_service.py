@@ -108,7 +108,9 @@ class BeerService:
 
         scored: list[tuple[int, dict]] = []
         for beer in self._beers:
-            beer_name = str(beer.get("Name", "")).lower().strip()
+            # beer_name = str(beer.get("Name", "")).lower().strip()
+            beer_name = str(beer.get("name_fixed", beer.get("Name", ""))).lower().strip()
+
             
             # Debug: log the first few beers to see what names look like
             if len(scored) < 5:
@@ -162,7 +164,7 @@ class BeerService:
                 f"Spices={b.get('Spices', 0)}"
             )
             lines.append(
-                f"- {_fix_encoding(str(b.get('Name', 'Unknown')))} by {_fix_encoding(str(b.get('Brewery', 'Unknown Brewery')))} "
+                f"- {str(b.get('name_fixed', b.get('Name', 'Unknown')))} by {_fix_encoding(str(b.get('Brewery', 'Unknown Brewery')))} "
                 f"({b.get('Style', '?')}, {b.get('ABV', '?')}% ABV, IBU {ibu_range}): "
                 f"{str(b.get('Description', '')).strip()[:200]} "
                 f"[{flavor_summary}]"

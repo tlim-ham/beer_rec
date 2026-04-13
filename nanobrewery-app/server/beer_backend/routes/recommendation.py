@@ -148,7 +148,8 @@ async def get_beers(
     for beer in beer_service._beers:
         # Extract the flavor profile values, defaulting to 0 if missing
         beer_option = {
-            "name": str(beer.get("Name", "Unknown")),
+            # "name": str(beer.get("Name", "Unknown")),
+            "name": str(beer.get("name_fixed", beer.get("Name", "Unknown"))),
             "body": float(beer.get("Body", 0)),
             "malty": float(beer.get("Malty", 0)),
             "sour": float(beer.get("Sour", 0)),

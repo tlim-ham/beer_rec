@@ -61,7 +61,8 @@ class RecommendationPipeline:
         intro_message = session.history[-1]["parts"][0]["text"]
 
         # Append beer list to intro message
-        beer_names = "\n".join([f"{i+1}. {_fix_encoding(beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])
+        # beer_names = "\n".join([f"{i+1}. {_fix_encoding(beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])
+        beer_names = "\n".join([f"{i+1}. {beer.get('name_fixed', beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])
         intro_with_beers = f"{intro_message}\n\nYour recommended beers:\n{beer_names}"
 
         # Generate suggested questions as separate array
