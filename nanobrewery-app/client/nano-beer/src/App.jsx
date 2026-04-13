@@ -222,43 +222,46 @@ function InputPage({ onGenerate }) {
   }
 
   async function handleGenerate() {
-    setIsLoading(true);
-    try {
-      const flavorProfile = {
-        Body: vals.body,
-        Alcohol: vals.body,
-        Bitter: vals.bitter,
-        Sweet: vals.sweet,
-        Sour: vals.sour,
-        Salty: vals.salty,
-        Fruits: vals.fruits,
-        Hoppy: vals.hoppy,
-        Spices: vals.spices,
-        Malty: vals.malty,
-      };
+  setIsLoading(true);
+  try {
+    const flavorProfile = {
+      Body: vals.body,
+      Alcohol: vals.body,
+      Bitter: vals.bitter,
+      Sweet: vals.sweet,
+      Sour: vals.sour,
+      Salty: vals.salty,
+      Fruits: vals.fruits,
+      Hoppy: vals.hoppy,
+      Spices: vals.spices,
+      Malty: vals.malty,
+    };
 
-      const response = await fetch(`${API_BASE}/api/v1/recommend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flavor_profile: flavorProfile }),
-      });
+    const response = await fetch(`${API_BASE}/api/v1/recommend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        flavor_profile: flavorProfile,
+        selected_beer_name: search || null
+      }),
+    });
 
-      if (response.status === 429) {
-        const error = await response.json();
-        alert(`⏳ ${error.detail}\n\nTake a breath and try again in a moment!`);
-        return;
-      }
-
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = await response.json();
-      onGenerate(data.session_id, data.intro_message, data.suggested_questions);
-    } catch (error) {
-      console.error('Error generating recommendations:', error);
-      alert('Failed to generate recommendations. Please try again.');
-    } finally {
-      setIsLoading(false);
+    if (response.status === 429) {
+      const error = await response.json();
+      alert(`⏳ ${error.detail}\n\nTake a breath and try again in a moment!`);
+      return;
     }
+
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    onGenerate(data.session_id, data.intro_message, data.suggested_questions);
+  } catch (error) {
+    console.error('Error generating recommendations:', error);
+    alert('Failed to generate recommendations. Please try again.');
+  } finally {
+    setIsLoading(false);
   }
+}
 
   return (
     <div className="input-page-grid" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "3rem", alignItems: "start" }}>
