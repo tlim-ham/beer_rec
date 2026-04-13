@@ -18,6 +18,18 @@ const DEFAULTS = { body: 50, malty: 50, sour: 30, fruits: 40, hoppy: 60, bitter:
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8002";
 
+// Color palette with improved contrast
+const COLORS = {
+  primary: "#ffd966",      // Brighter gold
+  primaryDark: "#d4a017",  // Darker gold
+  text: "#f5f1e8",          // Much lighter text
+  textMuted: "#c9bfaa",    // Better contrast for secondary text
+  textDim: "#9a8f7a",      // Even darker for hints
+  bg: "#0a0703",            // Slightly darker background
+  bgAlt: "#13100a",         // Alternate background
+  border: "#3a3220",        // Better visible borders
+};
+
 function Slider({ label, value, onChange, left, right, flashing }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const vocabEntry = VOCABULARY[label] || { def: "", hint: "" };
@@ -27,17 +39,24 @@ function Slider({ label, value, onChange, left, right, flashing }) {
       marginBottom: "1.4rem",
       borderRadius: "8px",
       padding: "0.5rem 0.6rem",
-      background: flashing ? "rgba(240,192,64,0.07)" : "transparent",
+      background: flashing ? "rgba(255,217,102,0.1)" : "transparent",
       transition: "background 0.6s ease",
       position: "relative",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", alignItems: "center" }}>
         <span 
-          style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.95rem", color: "#e8d5a3", cursor: "help", position: "relative" }}
+          style={{ 
+            fontFamily: "'DM Sans', sans-serif", 
+            fontSize: "0.95rem", 
+            color: COLORS.primary, 
+            cursor: "help", 
+            position: "relative",
+            fontWeight: "600"
+          }}
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          {label} <span style={{ fontSize: "0.7rem", color: "#8a7a5a", marginLeft: "0.3rem" }}>?</span>
+          {label} <span style={{ fontSize: "0.7rem", color: COLORS.textDim, marginLeft: "0.3rem" }}>?</span>
           
           {/* Tooltip */}
           {showTooltip && (
@@ -46,22 +65,22 @@ function Slider({ label, value, onChange, left, right, flashing }) {
               bottom: "100%",
               left: 0,
               right: 0,
-              background: "#1a1208",
-              border: "1px solid #3a2e18",
+              background: COLORS.bgAlt,
+              border: `1px solid ${COLORS.border}`,
               borderRadius: "8px",
               padding: "0.75rem",
               marginBottom: "0.5rem",
               fontSize: "0.8rem",
               lineHeight: 1.4,
-              color: "#e8d5a3",
+              color: COLORS.text,
               whiteSpace: "normal",
               zIndex: 1000,
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
               pointerEvents: "none",
               minWidth: "180px",
             }}>
-              <div style={{ color: "#f0c040", fontWeight: "600", marginBottom: "0.3rem" }}>{vocabEntry.def}</div>
-              <div style={{ color: "#8a7a5a", fontSize: "0.75rem", fontStyle: "italic" }}>{vocabEntry.hint}</div>
+              <div style={{ color: COLORS.primary, fontWeight: "600", marginBottom: "0.3rem" }}>{vocabEntry.def}</div>
+              <div style={{ color: COLORS.textDim, fontSize: "0.75rem", fontStyle: "italic" }}>{vocabEntry.hint}</div>
               {/* Arrow pointing down */}
               <div style={{
                 position: "absolute",
@@ -71,21 +90,21 @@ function Slider({ label, value, onChange, left, right, flashing }) {
                 height: 0,
                 borderLeft: "6px solid transparent",
                 borderRight: "6px solid transparent",
-                borderTop: "6px solid #1a1208",
+                borderTop: `6px solid ${COLORS.bgAlt}`,
               }} />
             </div>
           )}
         </span>
-        <span style={{ fontFamily: "monospace", fontSize: "1rem", color: "#f0c040", fontWeight: "700" }}>{value}</span>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1rem", color: COLORS.primary, fontWeight: "700" }}>{value}</span>
       </div>
       <input
         type="range" min="0" max="100" step="1" value={value}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: "#f0c040", cursor: "pointer" }}
+        style={{ width: "100%", accentColor: COLORS.primary, cursor: "pointer" }}
       />
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.2rem" }}>
-        <span style={{ fontSize: "0.7rem", color: "#8a7a5a" }}>{left}</span>
-        <span style={{ fontSize: "0.7rem", color: "#8a7a5a" }}>{right}</span>
+        <span style={{ fontSize: "0.7rem", color: COLORS.textDim, fontFamily: "'DM Sans', sans-serif" }}>{left}</span>
+        <span style={{ fontSize: "0.7rem", color: COLORS.textDim, fontFamily: "'DM Sans', sans-serif" }}>{right}</span>
       </div>
     </div>
   );
@@ -96,11 +115,11 @@ function TasteBar({ label, value }) {
   return (
     <div style={{ marginBottom: "0.8rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
-        <span style={{ fontSize: "0.85rem", color: "#c4b08a" }}>{label}</span>
-        <span style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "#f0c040" }}>{value.toFixed(1)}/100</span>
+        <span style={{ fontSize: "0.85rem", color: COLORS.textMuted, fontFamily: "'DM Sans', sans-serif", fontWeight: "500" }}>{label}</span>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.85rem", color: COLORS.primary, fontWeight: "700" }}>{value.toFixed(1)}/100</span>
       </div>
-      <div style={{ background: "#1a1208", borderRadius: "4px", height: "6px", overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg, #c8860a, #f0c040)", borderRadius: "4px", transition: "width 0.4s ease" }} />
+      <div style={{ background: COLORS.bgAlt, borderRadius: "4px", height: "6px", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(90deg, ${COLORS.primaryDark}, ${COLORS.primary})`, borderRadius: "4px", transition: "width 0.4s ease" }} />
       </div>
     </div>
   );
@@ -109,9 +128,16 @@ function TasteBar({ label, value }) {
 function SectionLabel({ children }) {
   return (
     <div style={{
-      fontSize: "0.7rem", letterSpacing: "0.15em", textTransform: "uppercase",
-      color: "#6a5a3a", marginBottom: "0.8rem", marginTop: "1.2rem",
-      borderBottom: "1px solid #2a2010", paddingBottom: "0.4rem",
+      fontSize: "0.75rem", 
+      letterSpacing: "0.15em", 
+      textTransform: "uppercase",
+      color: COLORS.textDim, 
+      marginBottom: "0.8rem", 
+      marginTop: "1.2rem",
+      borderBottom: `1px solid ${COLORS.border}`, 
+      paddingBottom: "0.4rem",
+      fontFamily: "'DM Sans', sans-serif",
+      fontWeight: "600"
     }}>
       {children}
     </div>
@@ -221,7 +247,7 @@ function InputPage({ onGenerate }) {
       {/* Left — beer picker + sliders */}
       <div>
         <SectionLabel>Start with a beer you already enjoy</SectionLabel>
-        <p style={{ color: "#8a7a5a", fontSize: "0.82rem", marginBottom: "0.8rem", fontStyle: "italic" }}>
+        <p style={{ color: COLORS.textMuted, fontSize: "0.85rem", marginBottom: "0.8rem", fontStyle: "italic", fontFamily: "'DM Sans', sans-serif" }}>
           Search for a beer and we'll pre-fill your preferences. Fine-tune the sliders below.
         </p>
 
@@ -238,13 +264,13 @@ function InputPage({ onGenerate }) {
               disabled={isLoadingBeers}
               style={{
                 width: "100%",
-                background: "#1a1208",
-                border: "1px solid #3a2e18",
-                color: "#e8d5a3",
+                background: COLORS.bgAlt,
+                border: `1px solid ${COLORS.border}`,
+                color: COLORS.text,
                 padding: "0.75rem 1rem",
                 borderRadius: "8px",
                 fontSize: "0.95rem",
-                fontFamily: "inherit",
+                fontFamily: "'DM Sans', sans-serif",
                 boxSizing: "border-box",
                 outline: "none",
                 opacity: isLoadingBeers ? 0.6 : 1,
@@ -257,8 +283,8 @@ function InputPage({ onGenerate }) {
                 top: "100%",
                 left: 0,
                 right: 0,
-                background: "#1a1208",
-                border: "1px solid #3a2e18",
+                background: COLORS.bgAlt,
+                border: `1px solid ${COLORS.border}`,
                 borderRadius: "8px",
                 marginTop: "0.25rem",
                 zIndex: 100,
@@ -272,12 +298,13 @@ function InputPage({ onGenerate }) {
                     style={{
                       padding: "0.75rem 1rem",
                       cursor: "pointer",
-                      color: "#e8d5a3",
+                      color: COLORS.text,
                       fontSize: "0.9rem",
-                      borderBottom: "1px solid #2a2010",
+                      fontFamily: "'DM Sans', sans-serif",
+                      borderBottom: `1px solid ${COLORS.border}`,
                       transition: "background 0.15s",
                     }}
-                    onMouseOver={e => e.currentTarget.style.background = "#2a2010"}
+                    onMouseOver={e => e.currentTarget.style.background = COLORS.border}
                     onMouseOut={e => e.currentTarget.style.background = "transparent"}
                   >
                     {beer.name}
@@ -292,14 +319,20 @@ function InputPage({ onGenerate }) {
             onClick={handleReset}
             title="Reset to defaults"
             style={{
-              padding: "0.75rem 1rem", background: "none",
-              border: "1px solid #3a2e18", borderRadius: "8px",
-              color: "#6a5a3a", fontSize: "0.8rem", cursor: "pointer",
-              fontFamily: "inherit", letterSpacing: "0.05em",
+              padding: "0.75rem 1rem", 
+              background: "none",
+              border: `1px solid ${COLORS.border}`, 
+              borderRadius: "8px",
+              color: COLORS.textDim, 
+              fontSize: "0.8rem", 
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif", 
+              letterSpacing: "0.05em",
+              fontWeight: "600",
               transition: "color 0.2s, border-color 0.2s",
             }}
-            onMouseOver={e => { e.currentTarget.style.color = "#f0c040"; e.currentTarget.style.borderColor = "#f0c040"; }}
-            onMouseOut={e => { e.currentTarget.style.color = "#6a5a3a"; e.currentTarget.style.borderColor = "#3a2e18"; }}
+            onMouseOver={e => { e.currentTarget.style.color = COLORS.primary; e.currentTarget.style.borderColor = COLORS.primary; }}
+            onMouseOut={e => { e.currentTarget.style.color = COLORS.textDim; e.currentTarget.style.borderColor = COLORS.border; }}
           >
             Reset
           </button>
@@ -326,14 +359,14 @@ function InputPage({ onGenerate }) {
       {/* Right — snapshot + CTA */}
       <div className="sticky-right" style={{ position: "sticky", top: "90px" }}>
         <SectionLabel>Your taste snapshot</SectionLabel>
-        <div style={{ background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "12px", padding: "1.4rem", marginBottom: "1.2rem" }}>
+        <div style={{ background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "12px", padding: "1.4rem", marginBottom: "1.2rem" }}>
           <TasteBar label="Richness" value={(vals.body + vals.malty) / 2} />
           <TasteBar label="Brightness" value={(vals.sour + vals.fruits) / 2} />
           <TasteBar label="Hops" value={(vals.hoppy + vals.bitter) / 2} />
           <TasteBar label="Edge" value={(vals.spices + vals.salty) / 2} />
         </div>
 
-        <p style={{ color: "#6a5a3a", fontSize: "0.78rem", fontStyle: "italic", marginBottom: "1.2rem", lineHeight: 1.5 }}>
+        <p style={{ color: COLORS.textMuted, fontSize: "0.8rem", fontStyle: "italic", marginBottom: "1.2rem", lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
           We'll match your profile against our brewery's catalog and surface the beers closest to your palate.
         </p>
 
@@ -341,11 +374,18 @@ function InputPage({ onGenerate }) {
           onClick={handleGenerate}
           disabled={isLoading}
           style={{
-            width: "100%", padding: "1.1rem", background: "linear-gradient(135deg, #c8860a, #f0c040)",
-            border: "none", borderRadius: "10px", color: "#0a0600", fontWeight: "800",
-            fontSize: "1.05rem", cursor: isLoading ? "not-allowed" : "pointer", letterSpacing: "0.04em",
-            fontFamily: "'Playfair Display', serif",
-            boxShadow: "0 4px 24px rgba(240,192,64,0.3)",
+            width: "100%", 
+            padding: "1.1rem", 
+            background: `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+            border: "none", 
+            borderRadius: "10px", 
+            color: "#0a0600", 
+            fontWeight: "800",
+            fontSize: "1.05rem", 
+            cursor: isLoading ? "not-allowed" : "pointer", 
+            letterSpacing: "0.04em",
+            fontFamily: "'DM Sans', sans-serif",
+            boxShadow: `0 4px 24px rgba(255,217,102,0.3)`,
             transition: "opacity 0.2s",
             opacity: isLoading ? 0.7 : 1,
           }}
@@ -389,7 +429,6 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
       });
 
       if (response.status === 429) {
-        // Rate limit error
         const error = await response.json();
         setMessages(prev => [...prev, {
           role: 'assistant',
@@ -424,25 +463,31 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
       {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem",
-        padding: "1rem", background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "10px"
+        padding: "1rem", background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "10px"
       }}>
         <button
           onClick={onBack}
           style={{
-            padding: "0.5rem 1rem", background: "none", border: "1px solid #3a2e18",
-            borderRadius: "6px", color: "#6a5a3a", cursor: "pointer",
-            fontSize: "0.9rem", fontFamily: "inherit",
+            padding: "0.5rem 1rem", 
+            background: "none", 
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: "6px", 
+            color: COLORS.textDim, 
+            cursor: "pointer",
+            fontSize: "0.9rem", 
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: "600"
           }}
-          onMouseOver={e => e.currentTarget.style.color = "#f0c040"}
-          onMouseOut={e => e.currentTarget.style.color = "#6a5a3a"}
+          onMouseOver={e => e.currentTarget.style.color = COLORS.primary}
+          onMouseOut={e => e.currentTarget.style.color = COLORS.textDim}
         >
           ← Back to Input
         </button>
         <div>
-          <h2 style={{ margin: 0, color: "#f0c040", fontFamily: "'Playfair Display', serif", fontSize: "1.5rem" }}>
+          <h2 style={{ margin: 0, color: COLORS.primary, fontFamily: "'DM Sans', sans-serif", fontSize: "1.5rem", fontWeight: "700" }}>
             Beer Recommendations Chat
           </h2>
-          <p style={{ margin: "0.25rem 0 0 0", color: "#8a7a5a", fontSize: "0.85rem" }}>
+          <p style={{ margin: "0.25rem 0 0 0", color: COLORS.textMuted, fontSize: "0.85rem", fontFamily: "'DM Sans', sans-serif" }}>
             Ask questions about your beer recommendations!
           </p>
         </div>
@@ -451,7 +496,7 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
       {/* Chat Messages */}
       <div style={{
         height: "60vh", overflowY: "auto", padding: "1rem",
-        background: "#0e0b04", border: "1px solid #2a2010",
+        background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`,
         borderRadius: "10px", marginBottom: "1rem"
       }}>
         {messages.map((message, index) => (
@@ -461,11 +506,14 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
           }}>
             <div style={{
               maxWidth: "70%", padding: "1rem 1.2rem",
-              background: message.role === 'user' ? "#f0c040" : "#1a1208",
-              color: message.role === 'user' ? "#0a0600" : "#e8d5a3",
+              background: message.role === 'user' ? COLORS.primary : COLORS.bgAlt,
+              color: message.role === 'user' ? "#0a0600" : COLORS.text,
               borderRadius: "15px",
-              border: message.role === 'user' ? "none" : "1px solid #2a2010",
-              fontSize: "0.95rem", lineHeight: 1.5, whiteSpace: "pre-wrap"
+              border: message.role === 'user' ? "none" : `1px solid ${COLORS.border}`,
+              fontSize: "0.95rem", 
+              lineHeight: 1.5, 
+              whiteSpace: "pre-wrap",
+              fontFamily: "'DM Sans', sans-serif"
             }}>
               {message.content}
             </div>
@@ -475,9 +523,13 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
         {isLoading && (
           <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "1.5rem" }}>
             <div style={{
-              padding: "1rem 1.2rem", background: "#1a1208",
-              border: "1px solid #2a2010", borderRadius: "15px",
-              color: "#8a7a5a", fontSize: "0.95rem"
+              padding: "1rem 1.2rem", 
+              background: COLORS.bgAlt,
+              border: `1px solid ${COLORS.border}`, 
+              borderRadius: "15px",
+              color: COLORS.textMuted, 
+              fontSize: "0.95rem",
+              fontFamily: "'DM Sans', sans-serif"
             }}>
               Thinking...
             </div>
@@ -501,23 +553,29 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
                     setTimeout(() => handleSendMessage(), 100);
                   }}
                   style={{
-                    padding: "0.6rem 0.9rem", background: "#f0c040",
-                    border: "2px solid #c8860a", borderRadius: "20px",
-                    color: "#0a0600", fontSize: "0.85rem", cursor: "pointer",
-                    fontFamily: "inherit", fontWeight: "500", transition: "all 0.2s ease",
-                    boxShadow: "0 2px 6px rgba(240,192,64,0.3)"
+                    padding: "0.6rem 0.9rem", 
+                    background: COLORS.primary,
+                    border: `2px solid ${COLORS.primaryDark}`, 
+                    borderRadius: "20px",
+                    color: "#0a0600", 
+                    fontSize: "0.85rem", 
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif", 
+                    fontWeight: "600", 
+                    transition: "all 0.2s ease",
+                    boxShadow: `0 2px 6px rgba(255,217,102,0.3)`
                   }}
                   onMouseOver={e => {
-                    e.currentTarget.style.background = "#c8860a";
-                    e.currentTarget.style.borderColor = "#f0c040";
+                    e.currentTarget.style.background = COLORS.primaryDark;
+                    e.currentTarget.style.borderColor = COLORS.primary;
                     e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(240,192,64,0.5)";
+                    e.currentTarget.style.boxShadow = `0 4px 10px rgba(255,217,102,0.5)`;
                   }}
                   onMouseOut={e => {
-                    e.currentTarget.style.background = "#f0c040";
-                    e.currentTarget.style.borderColor = "#c8860a";
+                    e.currentTarget.style.background = COLORS.primary;
+                    e.currentTarget.style.borderColor = COLORS.primaryDark;
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(240,192,64,0.3)";
+                    e.currentTarget.style.boxShadow = `0 2px 6px rgba(255,217,102,0.3)`;
                   }}
                 >
                   {question}
@@ -533,7 +591,7 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
       {/* Input Area */}
       <div style={{
         display: "flex", gap: "0.5rem", padding: "1rem",
-        background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "10px"
+        background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "10px"
       }}>
         <textarea
           value={inputMessage}
@@ -542,9 +600,9 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
           placeholder="Ask about your beer recommendations..."
           style={{
             flex: 1, minHeight: "50px", maxHeight: "120px",
-            background: "#1a1208", border: "1px solid #3a2e18",
-            borderRadius: "8px", color: "#e8d5a3", padding: "0.75rem",
-            fontSize: "0.95rem", fontFamily: "inherit", resize: "vertical", outline: "none"
+            background: COLORS.bg, border: `1px solid ${COLORS.border}`,
+            borderRadius: "8px", color: COLORS.text, padding: "0.75rem",
+            fontSize: "0.95rem", fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none"
           }}
           disabled={isLoading}
         />
@@ -553,12 +611,15 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
           disabled={!inputMessage.trim() || isLoading}
           style={{
             padding: "0.75rem 1.5rem",
-            background: isLoading || !inputMessage.trim() ? "#2a2010" : "linear-gradient(135deg, #c8860a, #f0c040)",
-            border: "none", borderRadius: "8px",
-            color: isLoading || !inputMessage.trim() ? "#6a5a3a" : "#0a0600",
+            background: isLoading || !inputMessage.trim() ? COLORS.border : `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
+            border: "none", 
+            borderRadius: "8px",
+            color: isLoading || !inputMessage.trim() ? COLORS.textDim : "#0a0600",
             fontWeight: "600",
             cursor: isLoading || !inputMessage.trim() ? "not-allowed" : "pointer",
-            fontSize: "0.95rem", fontFamily: "inherit", alignSelf: "flex-end"
+            fontSize: "0.95rem", 
+            fontFamily: "'DM Sans', sans-serif", 
+            alignSelf: "flex-end"
           }}
         >
           {isLoading ? "..." : "Send"}
@@ -569,17 +630,18 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
       <div style={{
         marginTop: "1rem",
         padding: "0.75rem",
-        background: "#0e0b04",
-        border: "1px solid #2a2010",
+        background: COLORS.bgAlt,
+        border: `1px solid ${COLORS.border}`,
         borderRadius: "8px",
         textAlign: "center"
       }}>
         <p style={{
           margin: 0,
-          color: "#8a7a5a",
+          color: COLORS.textMuted,
           fontSize: "0.8rem",
           fontStyle: "italic",
-          lineHeight: 1.4
+          lineHeight: 1.4,
+          fontFamily: "'DM Sans', sans-serif"
         }}>
           Hoppy can make mistakes. For the most accurate information, please double-check with official sources.
         </p>
@@ -605,20 +667,29 @@ function VocabularyTab() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         style={{
-          width: "360px", background: "#1a1208", border: "1px solid #3a2e18",
-          color: "#e8d5a3", padding: "0.7rem 1rem", borderRadius: "8px",
-          fontSize: "0.9rem", marginBottom: "1.5rem", fontFamily: "inherit", boxSizing: "border-box",
+          width: "360px", 
+          background: COLORS.bgAlt, 
+          border: `1px solid ${COLORS.border}`,
+          color: COLORS.text, 
+          padding: "0.7rem 1rem", 
+          borderRadius: "8px",
+          fontSize: "0.9rem", 
+          marginBottom: "1.5rem", 
+          fontFamily: "'DM Sans', sans-serif", 
+          boxSizing: "border-box",
         }}
       />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.8rem" }}>
         {filtered.map(([name, v]) => (
           <div key={name} style={{
-            padding: "1rem 1.2rem", background: "#0e0b04",
-            border: "1px solid #2a2010", borderRadius: "10px",
+            padding: "1rem 1.2rem", 
+            background: COLORS.bgAlt,
+            border: `1px solid ${COLORS.border}`, 
+            borderRadius: "10px",
           }}>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "1rem", color: "#f0c040", marginBottom: "0.3rem" }}>{name}</div>
-            <div style={{ color: "#c4b08a", fontSize: "0.85rem", marginBottom: "0.3rem" }}>{v.def}</div>
-            <div style={{ color: "#8a7a5a", fontSize: "0.75rem", fontStyle: "italic" }}>{v.hint}</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1rem", color: COLORS.primary, marginBottom: "0.3rem", fontWeight: "700" }}>{name}</div>
+            <div style={{ color: COLORS.textMuted, fontSize: "0.85rem", marginBottom: "0.3rem", fontFamily: "'DM Sans', sans-serif" }}>{v.def}</div>
+            <div style={{ color: COLORS.textDim, fontSize: "0.75rem", fontStyle: "italic", fontFamily: "'DM Sans', sans-serif" }}>{v.hint}</div>
           </div>
         ))}
       </div>
@@ -630,17 +701,17 @@ function SettingRow({ label, description, value, onChange }) {
   return (
     <div style={{
       display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "0.9rem 0", borderBottom: "1px solid #1a1208",
+      padding: "0.9rem 0", borderBottom: `1px solid ${COLORS.bgAlt}`,
     }}>
       <div>
-        <div style={{ color: "#e8d5a3", fontSize: "0.9rem", marginBottom: "0.15rem" }}>{label}</div>
-        <div style={{ color: "#6a5a3a", fontSize: "0.75rem" }}>{description}</div>
+        <div style={{ color: COLORS.text, fontSize: "0.9rem", marginBottom: "0.15rem", fontFamily: "'DM Sans', sans-serif", fontWeight: "600" }}>{label}</div>
+        <div style={{ color: COLORS.textDim, fontSize: "0.75rem", fontFamily: "'DM Sans', sans-serif" }}>{description}</div>
       </div>
       <button
         onClick={() => onChange(!value)}
         style={{
           width: "44px", height: "24px", borderRadius: "12px",
-          background: value ? "#f0c040" : "#2a2010",
+          background: value ? COLORS.primary : COLORS.border,
           border: "none", cursor: "pointer", position: "relative",
           transition: "background 0.2s", flexShrink: 0,
         }}
@@ -649,7 +720,7 @@ function SettingRow({ label, description, value, onChange }) {
           position: "absolute", top: "3px",
           left: value ? "23px" : "3px",
           width: "18px", height: "18px", borderRadius: "50%",
-          background: value ? "#0a0600" : "#6a5a3a",
+          background: value ? "#0a0600" : COLORS.textDim,
           transition: "left 0.2s",
         }} />
       </button>
@@ -677,8 +748,8 @@ function SettingsTab() {
         value={showAdvanced}
         onChange={setShowAdvanced}
       />
-      <div style={{ marginTop: "2rem", padding: "1rem", background: "#0e0b04", border: "1px solid #2a2010", borderRadius: "10px" }}>
-        <p style={{ color: "#6a5a3a", fontSize: "0.78rem", fontStyle: "italic", margin: 0 }}>
+      <div style={{ marginTop: "2rem", padding: "1rem", background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "10px" }}>
+        <p style={{ color: COLORS.textDim, fontSize: "0.78rem", fontStyle: "italic", margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
           Settings are not yet persisted — they'll reset on page refresh.
         </p>
       </div>
@@ -702,8 +773,8 @@ function DisclaimerModal({ onAccept }) {
       backdropFilter: "blur(4px)"
     }}>
       <div style={{
-        background: "#0e0b04",
-        border: "2px solid #3a2e18",
+        background: COLORS.bgAlt,
+        border: `2px solid ${COLORS.border}`,
         borderRadius: "12px",
         padding: "2rem",
         maxWidth: "500px",
@@ -712,11 +783,12 @@ function DisclaimerModal({ onAccept }) {
         boxShadow: "0 20px 60px rgba(0, 0, 0, 0.8)"
       }}>
         <h2 style={{
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: "1.8rem",
-          color: "#f0c040",
+          color: COLORS.primary,
           margin: "0 0 1.5rem 0",
-          textAlign: "center"
+          textAlign: "center",
+          fontWeight: "700"
         }}>
           ⚠️ Important Disclaimers
         </h2>
@@ -729,24 +801,26 @@ function DisclaimerModal({ onAccept }) {
         }}>
           {/* Age requirement */}
           <div style={{
-            background: "#1a1208",
-            border: "1px solid #2a2010",
+            background: COLORS.bg,
+            border: `1px solid ${COLORS.border}`,
             borderRadius: "8px",
             padding: "1rem",
           }}>
             <h3 style={{
-              color: "#f0c040",
+              color: COLORS.primary,
               fontSize: "1rem",
               margin: "0 0 0.5rem 0",
-              fontFamily: "'Playfair Display', serif"
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: "700"
             }}>
               🔞 Age Restriction
             </h3>
             <p style={{
-              color: "#e8d5a3",
+              color: COLORS.text,
               fontSize: "0.9rem",
               lineHeight: 1.5,
-              margin: 0
+              margin: 0,
+              fontFamily: "'DM Sans', sans-serif"
             }}>
               You must be 21 years of age or older to use this application. By accessing this service, you confirm that you meet this age requirement.
             </p>
@@ -754,24 +828,26 @@ function DisclaimerModal({ onAccept }) {
 
           {/* Responsible drinking */}
           <div style={{
-            background: "#1a1208",
-            border: "1px solid #2a2010",
+            background: COLORS.bg,
+            border: `1px solid ${COLORS.border}`,
             borderRadius: "8px",
             padding: "1rem",
           }}>
             <h3 style={{
-              color: "#f0c040",
+              color: COLORS.primary,
               fontSize: "1rem",
               margin: "0 0 0.5rem 0",
-              fontFamily: "'Playfair Display', serif"
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: "700"
             }}>
               🥤 Drink Responsibly
             </h3>
             <p style={{
-              color: "#e8d5a3",
+              color: COLORS.text,
               fontSize: "0.9rem",
               lineHeight: 1.5,
-              margin: 0
+              margin: 0,
+              fontFamily: "'DM Sans', sans-serif"
             }}>
               Please drink responsibly. Know your limits, never drink and drive, and always prioritize your health and safety. This tool is for educational purposes only.
             </p>
@@ -779,24 +855,26 @@ function DisclaimerModal({ onAccept }) {
 
           {/* Non-affiliation */}
           <div style={{
-            background: "#1a1208",
-            border: "1px solid #2a2010",
+            background: COLORS.bg,
+            border: `1px solid ${COLORS.border}`,
             borderRadius: "8px",
             padding: "1rem",
           }}>
             <h3 style={{
-              color: "#f0c040",
+              color: COLORS.primary,
               fontSize: "1rem",
               margin: "0 0 0.5rem 0",
-              fontFamily: "'Playfair Display', serif"
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: "700"
             }}>
               🏫 Non-Affiliation Notice
             </h3>
             <p style={{
-              color: "#e8d5a3",
+              color: COLORS.text,
               fontSize: "0.9rem",
               lineHeight: 1.5,
-              margin: 0
+              margin: 0,
+              fontFamily: "'DM Sans', sans-serif"
             }}>
               This application is not affiliated with, endorsed by, or associated with Hamilton College. It is an independent project created for educational purposes.
             </p>
@@ -808,28 +886,29 @@ function DisclaimerModal({ onAccept }) {
           style={{
             width: "100%",
             padding: "0.75rem 1.5rem",
-            background: "#f0c040",
+            background: COLORS.primary,
             border: "none",
             borderRadius: "8px",
             color: "#0a0600",
             fontSize: "1rem",
             fontWeight: "700",
             cursor: "pointer",
-            fontFamily: "inherit",
+            fontFamily: "'DM Sans', sans-serif",
             transition: "background 0.2s",
           }}
-          onMouseOver={e => e.currentTarget.style.background = "#ffd966"}
-          onMouseOut={e => e.currentTarget.style.background = "#f0c040"}
+          onMouseOver={e => e.currentTarget.style.background = COLORS.primaryDark}
+          onMouseOut={e => e.currentTarget.style.background = COLORS.primary}
         >
           I Understand & Accept
         </button>
 
         <p style={{
-          color: "#6a5a3a",
+          color: COLORS.textDim,
           fontSize: "0.75rem",
           textAlign: "center",
           margin: "1rem 0 0 0",
-          fontStyle: "italic"
+          fontStyle: "italic",
+          fontFamily: "'DM Sans', sans-serif"
         }}>
           You must accept these terms to continue
         </p>
@@ -850,7 +929,6 @@ export default function App() {
         setPage(event.state.page);
         setChatData(event.state.chatData || null);
       } else {
-        // Default to input page if no state
         setPage("input");
         setChatData(null);
       }
@@ -869,7 +947,6 @@ export default function App() {
     setChatData(newChatData);
     setPage("chat");
     
-    // Push state to browser history
     window.history.pushState(
       { page: "chat", chatData: newChatData },
       "",
@@ -880,8 +957,6 @@ export default function App() {
   function handleBackToInput() {
     setPage("input");
     setChatData(null);
-    
-    // Go back in browser history
     window.history.back();
   }
 
@@ -890,13 +965,20 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080501", fontFamily: "'DM Sans', sans-serif", color: "#e8d5a3" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+    <div style={{ minHeight: "100vh", background: COLORS.bg, fontFamily: "'DM Sans', sans-serif", color: COLORS.text }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
       <header style={{
-        padding: "2rem 3rem", borderBottom: "1px solid #2a2010",
-        background: "rgba(8,5,1,0.97)", position: "sticky", top: 0, zIndex: 100,
-        backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "2rem 3rem", 
+        borderBottom: `1px solid ${COLORS.border}`,
+        background: "rgba(10, 7, 3, 0.97)", 
+        position: "sticky", 
+        top: 0, 
+        zIndex: 100,
+        backdropFilter: "blur(8px)", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
           <img
@@ -911,12 +993,16 @@ export default function App() {
           />
           <div>
             <h1 style={{
-              fontFamily: "'Playfair Display', serif", fontSize: "2.5rem",
-              fontWeight: "900", margin: 0, color: "#f0c040", letterSpacing: "-0.02em",
+              fontFamily: "'DM Sans', sans-serif", 
+              fontSize: "2.5rem",
+              fontWeight: "900", 
+              margin: 0, 
+              color: COLORS.primary, 
+              letterSpacing: "-0.02em",
             }}>
               Hoppy
             </h1>
-            <p style={{ margin: 0, fontSize: "0.9rem", color: "#6a5a3a", letterSpacing: "0.1em" }}>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: COLORS.textDim, letterSpacing: "0.1em", fontFamily: "'DM Sans', sans-serif" }}>
               Know Your Beer • Enjoy Your Beer
             </p>
           </div>
