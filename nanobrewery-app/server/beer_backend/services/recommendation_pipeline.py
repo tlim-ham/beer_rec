@@ -47,7 +47,7 @@ class RecommendationPipeline:
         style_simple  = classification["Style_simple"]
 
         # Call get_beers_by_categories with exclude_beer_name parameter
-        beers = self._beer_svc.get_beers_by_categories(
+        beers = self._beers.get_beers_by_categories(
             clus_name=clus_name,
             style_simple=style_simple,
             exclude_beer_name=selected_beer_name

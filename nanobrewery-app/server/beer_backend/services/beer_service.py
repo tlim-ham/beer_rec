@@ -95,21 +95,30 @@ class BeerService:
     # Public API
     # ------------------------------------------------------------------
 
-    def get_beers_by_categories(
-        self,
-        clus_name: list[str],
-        style_simple: list[str],
-        limit: int = MAX_BEERS_PER_RECOMMENDATION,
-    ) -> list[dict]:
+    def get_beers_by_categories(self, clus_name: list[str], style_simple: list[str], limit: int = MAX_BEERS_PER_RECOMMENDATION, exclude_beer_name: str | None = None,) -> list[dict]:
         """
         Return up to `limit` beers matching predicted clus_name AND Style_simple.
-        Beers matching both score higher than those matching only one.
+        Optionally exclude a specific beer by name.
         """
         clus_set = set(c.lower() for c in clus_name)
         style_set = set(s.lower() for s in style_simple)
+        exclude_name = exclude_beer_name.lower().strip() if exclude_beer_name else None
+
+        logger.info(f"Excluding beer: '{exclude_name}'")  # Debug line
 
         scored: list[tuple[int, dict]] = []
         for beer in self._beers:
+            beer_name = str(beer.get("Name", "")).lower().strip()
+            
+            # Debug: log the first few beers to see what names look like
+            if len(scored) < 5:
+                logger.info(f"Checking beer: '{beer_name}' against exclude: '{exclude_name}'")
+            
+            # Skip the selected beer if provided
+            if exclude_name and beer_name == exclude_name:
+                logger.info(f"Excluded beer: {beer_name}")
+                continue
+                
             beer_clus = str(beer.get("clus_name", "")).lower()
             beer_style = str(beer.get("Style_simple", "")).lower()
 
@@ -117,7 +126,7 @@ class BeerService:
             matches_style = beer_style in style_set
 
             if matches_clus and matches_style:
-                priority = 0   # best — matches both
+                priority = 0
             elif matches_clus:
                 priority = 1
             elif matches_style:
@@ -131,8 +140,8 @@ class BeerService:
         results = [beer for _, beer in scored[:limit]]
 
         logger.info(
-            "Found %d beers for clus_name=%s style_simple=%s",
-            len(results), clus_name, style_simple,
+            "Found %d beers for clus_name=%s style_simple=%s (excluded: %s)",
+            len(results), clus_name, style_simple, exclude_name or "none",
         )
         return results
     def format_for_prompt(self, beers: list[dict]) -> str:
