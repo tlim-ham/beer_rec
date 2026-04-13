@@ -41,21 +41,24 @@ class RecommendationPipeline:
     # Step 1+2+3  — called once per user to kick off a new recommendation
     # ------------------------------------------------------------------
 
-    def start_recommendation(self, flavor_profile: dict) -> dict:
+    def start_recommendation(self, flavor_profile: dict, selected_beer_name: str | None = None) -> dict:
         classification = self._model.classify(flavor_profile, top_n=3)
         clus_name    = classification["clus_name"]  
         style_simple  = classification["Style_simple"]
 
-        beers = self._beers.get_beers_by_categories(
+        # Call get_beers_by_categories with exclude_beer_name parameter
+        beers = self._beer_svc.get_beers_by_categories(
             clus_name=clus_name,
-            style_simple=style_simple, 
+            style_simple=style_simple,
+            exclude_beer_name=selected_beer_name
         )
+        
         beer_context = self._beers.format_for_prompt(beers)
 
         session_id = str(uuid.uuid4())
         session = self._llm.start_session(session_id, beer_context)
         self._sessions[session_id] = session
-        intro_message = session.history[-1]["parts"][0]["text"]  # fixed: extract text from dict
+        intro_message = session.history[-1]["parts"][0]["text"]
 
         # Append beer list to intro message
         beer_names = "\n".join([f"{i+1}. {_fix_encoding(beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])

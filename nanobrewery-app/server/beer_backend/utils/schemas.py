@@ -26,6 +26,7 @@ class FlavorProfile(BaseModel):
 
 class StartRecommendationRequest(BaseModel):
     flavor_profile: FlavorProfile
+    selected_beer_name: str | None = Field(default=None, min_length=1)
     top_n_categories: int = Field(default=3, ge=1, le=5)
 
 

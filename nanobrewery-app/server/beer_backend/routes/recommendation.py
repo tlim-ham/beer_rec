@@ -48,6 +48,7 @@ async def start_recommendation(
     try:
         result = pipeline.start_recommendation(
             flavor_profile=body.flavor_profile.model_dump(),
+            selected_beer_name=body.selected_beer_name,
         )
     except RateLimitError as e:
         logger.error(f"Rate limit error: {e}")
