@@ -6,10 +6,10 @@ FastAPI router for all beer recommendation endpoints.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from beer_backend.services.recommendation_pipeline import RecommendationPipeline
-from beer_backend.services.beer_service import BeerService
-from beer_backend.services.llm_service import RateLimitError, BudgetExceededError
-from beer_backend.utils.schemas import (
+from ..services.recommendation_pipeline import RecommendationPipeline
+from ..services.beer_service import BeerService
+from ..services.llm_service import RateLimitError, BudgetExceededError
+from ..utils.schemas import (
     StartRecommendationRequest,
     StartRecommendationResponse,
     ChatRequest,
@@ -17,7 +17,7 @@ from beer_backend.utils.schemas import (
     SessionInfoResponse,
     BeerListResponse,
 )
-from beer_backend.dependencies import get_pipeline, get_beer_service
+from ..dependencies import get_pipeline, get_beer_service
 
 router = APIRouter(prefix="/api/v1", tags=["recommendations"])
 

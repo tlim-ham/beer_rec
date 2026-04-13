@@ -13,9 +13,9 @@ import logging
 import uuid
 from typing import Optional
 
-from beer_backend.services.model_service import ModelService
-from beer_backend.services.beer_service import BeerService, _fix_encoding
-from beer_backend.services.llm_service import LLMService, ChatSession, BudgetExceededError
+from ..services.model_service import ModelService
+from ..services.beer_service import BeerService, _fix_encoding
+from ..services.llm_service import LLMService, ChatSession, BudgetExceededError
 
 logger = logging.getLogger(__name__)
 
