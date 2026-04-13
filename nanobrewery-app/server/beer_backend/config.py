@@ -7,8 +7,9 @@ Application configuration loaded from environment variables / .env file.
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).parent
-
+# config.py is at: nanobrewery-app/server/beer_backend/config.py
+# We need to go up 3 levels to reach nanobrewery-app/
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
