@@ -16,10 +16,10 @@ import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from beer_backend.config import settings
-from beer_backend.routes.recommendation import router as recommendation_router
-from beer_backend.dependencies import get_model_service, get_beer_service
-from beer_backend.utils.schemas import HealthResponse
+from .config import settings
+from .routes.recommendation import router as recommendation_router
+from .dependencies import get_model_service, get_beer_service
+from .utils.schemas import HealthResponse
 
 # print("API KEY LOADED:", settings.GEMINI_API_KEY[:8], "...")
 
@@ -74,17 +74,21 @@ app.include_router(recommendation_router)
 # ---------------------------------------------------------------------------
 @app.get("/health", response_model=HealthResponse, tags=["health"])
 async def health_check():
+    model_loaded = False
     try:
         model_svc = get_model_service()
         model_loaded = model_svc._model is not None
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to load model service: {e}", exc_info=True)
         model_loaded = False
 
+    beers_in_db = 0
     try:
         beer_svc = get_beer_service()
         beers_in_db = len(beer_svc._beers)
-    except Exception:
-        from beer_backend.services.beer_service import _load_beers
+    except Exception as e:
+        logger.error(f"Failed to load beer service: {e}", exc_info=True)
+        from .services.beer_service import _load_beers
         _load_beers.cache_clear()
         beers_in_db = 0
 

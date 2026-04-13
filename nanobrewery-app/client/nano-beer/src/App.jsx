@@ -16,7 +16,7 @@ const VOCABULARY = {
 
 const DEFAULTS = { body: 50, malty: 50, sour: 30, fruits: 40, hoppy: 60, bitter: 50, spices: 20, salty: 10, sweet: 50 };
 
-const API_BASE = "http://localhost:8002";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8002";
 
 function Slider({ label, value, onChange, left, right, flashing }) {
   const [showTooltip, setShowTooltip] = useState(false);

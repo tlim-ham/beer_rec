@@ -7,11 +7,11 @@ Services are instantiated once at startup and reused across requests.
 
 from functools import lru_cache
 
-from beer_backend.services.model_service import ModelService
-from beer_backend.services.beer_service import BeerService
-from beer_backend.services.llm_service import LLMService
-from beer_backend.services.recommendation_pipeline import RecommendationPipeline
-from beer_backend.config import settings
+from .services.model_service import ModelService
+from .services.beer_service import BeerService
+from .services.llm_service import LLMService
+from .services.recommendation_pipeline import RecommendationPipeline
+from .config import settings
 
 
 @lru_cache(maxsize=1)

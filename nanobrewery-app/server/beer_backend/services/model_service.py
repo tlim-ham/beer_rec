@@ -10,6 +10,7 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 import pandas as pd
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -66,12 +67,9 @@ class ModelService:
     The model predicts both clus_name and Style_simple from flavor profile.
     """
 
-    MODEL_PATH = str(Path(__file__).parent.parent.parent.parent / "models" / "beer_multioutput_classifier.pkl")
-    ENCODERS_PATH = str(Path(__file__).parent.parent.parent.parent / "models" / "label_encoders.pkl")
-
     def __init__(self, model_path: str | None = None, encoders_path: str | None = None):
-        self._model_path = model_path or self.MODEL_PATH
-        self._encoders_path = encoders_path or self.ENCODERS_PATH
+        self._model_path = model_path or settings.MODEL_PATH
+        self._encoders_path = encoders_path or settings.ENCODERS_PATH
         self._model = _load_model(self._model_path)
         self._encoders = _load_encoders(self._encoders_path)
 
