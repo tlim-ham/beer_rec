@@ -5,6 +5,7 @@ FastAPI router for all beer recommendation endpoints.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+import logging
 
 from ..services.recommendation_pipeline import RecommendationPipeline
 from ..services.beer_service import BeerService
@@ -21,6 +22,7 @@ from ..dependencies import get_pipeline, get_beer_service
 
 router = APIRouter(prefix="/api/v1", tags=["recommendations"])
 
+logger = logging.getLogger(__name__)
 
 @router.options("/recommend")
 async def options_recommend():
@@ -48,12 +50,16 @@ async def start_recommendation(
             flavor_profile=body.flavor_profile.model_dump(),
         )
     except RateLimitError as e:
+        logger.error(f"Rate limit error: {e}")
         raise HTTPException(status_code=429, detail=str(e))
     except BudgetExceededError as e:
+        logger.error(f"Budget exceeded error: {e}")
         raise HTTPException(status_code=402, detail=str(e))
     except FileNotFoundError as e:
+        logger.error(f"File not found error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
+        logger.error(f"Pipeline error: {e}", exc_info=True)  # This logs the full traceback
         raise HTTPException(status_code=500, detail=f"Pipeline error: {e}")
 
     return StartRecommendationResponse(**result)
