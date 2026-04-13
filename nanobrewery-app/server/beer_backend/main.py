@@ -16,10 +16,10 @@ import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from beer_backend.config import settings
-from beer_backend.routes.recommendation import router as recommendation_router
-from beer_backend.dependencies import get_model_service, get_beer_service
-from beer_backend.utils.schemas import HealthResponse
+from .config import settings
+from .routes.recommendation import router as recommendation_router
+from .dependencies import get_model_service, get_beer_service
+from .utils.schemas import HealthResponse
 
 # print("API KEY LOADED:", settings.GEMINI_API_KEY[:8], "...")
 

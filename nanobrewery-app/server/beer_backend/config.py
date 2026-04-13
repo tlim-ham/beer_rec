@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ #
     # CORS — add your frontend origin(s) here
     # ------------------------------------------------------------------ #
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"]
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "https://beer-rec.onrender.com/"]
 
 
 settings = Settings()
