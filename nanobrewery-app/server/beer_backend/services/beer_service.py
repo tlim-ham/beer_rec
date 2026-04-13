@@ -29,6 +29,10 @@ ENCODING_FIXES = {
 
 def _fix_encoding(text: str) -> str:
     """Fix common encoding issues in beer names and brewery names."""
+    # Convert to string if it's not already
+    if not isinstance(text, str):
+        text = str(text)
+    
     if not text:
         return text
     
