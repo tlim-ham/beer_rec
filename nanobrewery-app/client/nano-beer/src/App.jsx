@@ -1007,8 +1007,8 @@ export default function App() {
             src="/beer-logo.png"
             alt="Beer Logo"
             style={{
-              width: "100px",
-              height: "100px",
+              width: "200px",
+              height: "200px",
               borderRadius: "8px",
               objectFit: "contain",
             }}
