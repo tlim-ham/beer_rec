@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ #
     # CORS — add your frontend origin(s) here
     # ------------------------------------------------------------------ #
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "https://beer-rec-1.onrender.com"]
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "https://beer-rec-1.onrender.com", "https://hoppy-ae4v.onrender.com/"]
 
 
 settings = Settings()
