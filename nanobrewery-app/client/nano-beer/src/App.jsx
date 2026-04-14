@@ -435,6 +435,14 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Scroll to top when chat page first loads
+    const chatContainer = document.querySelector('[data-chat-container]');
+    if (chatContainer) {
+      chatContainer.scrollTop = 0;
+    }
+  }, [sessionId]); // Run only when sessionId changes (new chat)
+
   async function handleSendMessage() {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -482,7 +490,7 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-      {/* Header */}
+      {/* Header
       <div style={{
         display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem",
         padding: "1rem", background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "10px"
@@ -513,14 +521,16 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
             Ask questions about your beer recommendations!
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Chat Messages */}
-      <div style={{
-        height: "60vh", overflowY: "auto", padding: "1rem",
-        background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`,
-        borderRadius: "10px", marginBottom: "1rem"
-      }}>
+      <div 
+        data-chat-container
+        style={{
+          height: "60vh", overflowY: "auto", padding: "1rem",
+          background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`,
+          borderRadius: "10px", marginBottom: "1rem"
+        }}>
         {messages.map((message, index) => (
           <div key={index} style={{
             marginBottom: "1.5rem", display: "flex",
@@ -648,26 +658,65 @@ function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
         </button>
       </div>
 
-      {/* Permanent Disclaimer */}
-      <div style={{
-        marginTop: "1rem",
-        padding: "0.75rem",
-        background: COLORS.bgAlt,
-        border: `1px solid ${COLORS.border}`,
-        borderRadius: "8px",
-        textAlign: "center"
-      }}>
-        <p style={{
-          margin: 0,
-          color: COLORS.textMuted,
-          fontSize: "0.8rem",
-          fontStyle: "italic",
-          lineHeight: 1.4,
-          fontFamily: "'DM Sans', sans-serif"
-        }}>
-          Hoppy can make mistakes. For the most accurate information, please double-check with official sources.
-        </p>
-      </div>
+      {/* Permanent Disclaimer + Home Button */}
+<div style={{
+  marginTop: "1rem",
+  padding: "0.75rem",
+  background: COLORS.bgAlt,
+  border: `1px solid ${COLORS.border}`,
+  borderRadius: "8px",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: "1rem",
+  textAlign: "center"
+}}>
+  <p style={{
+    margin: 0,
+    color: COLORS.textMuted,
+    fontSize: "0.8rem",
+    fontStyle: "italic",
+    lineHeight: 1.4,
+    fontFamily: "'DM Sans', sans-serif"
+  }}>
+    Hoppy can make mistakes. For the most accurate information, please double-check with official sources.
+  </p>
+  <button
+  onClick={onBack}
+  style={{
+    padding: "0.5rem 1rem",
+    background: COLORS.primary,
+    border: "none",
+    borderRadius: "6px",
+    color: "#0a0600",
+    cursor: "pointer",
+    fontSize: "0.85rem",
+    fontFamily: "'DM Sans', sans-serif",
+    fontWeight: "600",
+    whiteSpace: "nowrap",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem"
+  }}
+  onMouseOver={e => {
+    e.currentTarget.style.background = COLORS.primaryDark;
+    e.currentTarget.style.transform = "scale(1.05)";
+  }}
+  onMouseOut={e => {
+    e.currentTarget.style.background = COLORS.primary;
+    e.currentTarget.style.transform = "scale(1)";
+  }}
+>
+  Home
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+  </svg>
+</button>
+</div>
     </div>
   );
 }
@@ -994,7 +1043,7 @@ export default function App() {
         padding: "2rem 3rem", 
         borderBottom: `1px solid ${COLORS.border}`,
         background: "rgba(10, 7, 3, 0.97)", 
-        position: "sticky", 
+        position: "static", 
         top: 0, 
         zIndex: 100,
         backdropFilter: "blur(8px)", 
