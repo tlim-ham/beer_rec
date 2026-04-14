@@ -1016,7 +1016,7 @@ export default function App() {
           <div>
             <h1 style={{
               fontFamily: "'DM Sans', sans-serif", 
-              fontSize: "2.5rem",
+              fontSize: "3.5rem",
               fontWeight: "900", 
               margin: 0, 
               color: COLORS.primary, 
@@ -1024,7 +1024,7 @@ export default function App() {
             }}>
               Hoppy
             </h1>
-            <p style={{ margin: 0, fontSize: "0.9rem", color: COLORS.textDim, letterSpacing: "0.1em", fontFamily: "'DM Sans', sans-serif" }}>
+            <p style={{ margin: 0, fontSize: "1.2rem", color: COLORS.textDim, letterSpacing: "0.1em", fontFamily: "'DM Sans', sans-serif" }}>
               Know Your Beer • Enjoy Your Beer
             </p>
           </div>
