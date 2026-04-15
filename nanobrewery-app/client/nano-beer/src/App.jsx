@@ -988,8 +988,66 @@ function DisclaimerModal({ onAccept }) {
   );
 }
 
+function DataSourcesTab() {
+  const sources = [
+    {
+      name: "OpenBeerDB",
+      description: "Primary brewery and beer metadata, including style classifications and regional data.",
+      link: "https://openbeerdb.com/"
+    },
+    {
+      name: "Gemini 1.5 Flash",
+      description: "Generative AI used to synthesize flavor profiles and provide interactive chat guidance.",
+      link: "https://deepmind.google/technologies/gemini/"
+    }
+  ];
+
+  return (
+    <div style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "1rem" }}>
+      <SectionLabel>Information & Attribution</SectionLabel>
+      <p style={{ color: COLORS.textMuted, fontSize: "0.95rem", marginBottom: "2rem", lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
+        Hoppy leverages the following data repositories and artificial intelligence models to provide recommendations and educational insights:
+      </p>
+      
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
+        {sources.map((source) => (
+          <div key={source.name} style={{
+            padding: "1.5rem",
+            background: COLORS.bgAlt,
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: "12px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between"
+          }}>
+            <div>
+              <h4 style={{ color: COLORS.primary, margin: "0 0 0.75rem 0", fontSize: "1.1rem", fontFamily: "'DM Sans', sans-serif" }}>{source.name}</h4>
+              <p style={{ color: COLORS.text, fontSize: "0.9rem", margin: "0 0 1.25rem 0", lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
+                {source.description}
+              </p>
+            </div>
+            <a href={source.link} target="_blank" rel="noreferrer" style={{ 
+              color: COLORS.primary, 
+              fontSize: "0.85rem", 
+              textDecoration: "none",
+              fontWeight: "700",
+              fontFamily: "'DM Sans', sans-serif",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem"
+            }}>
+              Explore Data Source ↗
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState("input");
+  const [activeTab, setActiveTab] = useState("taste"); 
   const [chatData, setChatData] = useState(null);
   const [disclaimersAccepted, setDisclaimersAccepted] = useState(false);
 
@@ -1002,6 +1060,7 @@ export default function App() {
       } else {
         setPage("input");
         setChatData(null);
+        setActiveTab("taste");
       }
     };
 
@@ -1017,6 +1076,7 @@ export default function App() {
     const newChatData = { sessionId, initialMessage: llmMessage, suggestedQuestions };
     setChatData(newChatData);
     setPage("chat");
+    setActiveTab("chat"); // Switch focus to the new chat
     
     window.history.pushState(
       { page: "chat", chatData: newChatData },
@@ -1027,17 +1087,18 @@ export default function App() {
 
   function handleBackToInput() {
     setPage("input");
+    setActiveTab("taste");
     setChatData(null);
-    window.history.back();
-  }
-
-  if (!disclaimersAccepted) {
-    return <DisclaimerModal onAccept={handleAcceptDisclaimers} />;
+    if (window.history.state && window.history.state.page === "chat") {
+      window.history.back();
+    }
   }
 
   return (
     <div style={{ minHeight: "100vh", background: COLORS.bg, fontFamily: "'DM Sans', sans-serif", color: COLORS.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+      {!disclaimersAccepted && <DisclaimerModal onAccept={handleAcceptDisclaimers} />}
 
       <header style={{
         padding: "2rem 3rem", 
@@ -1055,22 +1116,10 @@ export default function App() {
           <img
             src="/beer-logo.png"
             alt="Beer Logo"
-            style={{
-              width: "200px",
-              height: "200px",
-              borderRadius: "8px",
-              objectFit: "contain",
-            }}
+            style={{ width: "200px", height: "200px", borderRadius: "8px", objectFit: "contain" }}
           />
           <div>
-            <h1 style={{
-              fontFamily: "'DM Sans', sans-serif", 
-              fontSize: "3.5rem",
-              fontWeight: "900", 
-              margin: 0, 
-              color: COLORS.primary, 
-              letterSpacing: "-0.02em",
-            }}>
+            <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "3.5rem", fontWeight: "900", margin: 0, color: COLORS.primary, letterSpacing: "-0.02em" }}>
               Hoppy
             </h1>
             <p style={{ margin: 0, fontSize: "1.2rem", color: COLORS.textDim, letterSpacing: "0.1em", fontFamily: "'DM Sans', sans-serif" }}>
@@ -1081,7 +1130,61 @@ export default function App() {
       </header>
 
       <main style={{ padding: "2.5rem 3rem 4rem" }}>
-        {page === "input" && <InputPage onGenerate={handleGenerate} />}
+        {/* Tab Navigation - Always visible */}
+        <div style={{ display: "flex", gap: "2rem", marginBottom: "2.5rem", borderBottom: `1px solid ${COLORS.border}` }}>
+          {["Taste", "Vocabulary", "Sources"].map(tab => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab.toLowerCase());
+                setPage("input"); // Clicking these tabs always takes you back to the "input" view mode
+              }}
+              style={{
+                padding: "0.75rem 0",
+                background: "none",
+                border: "none",
+                borderBottom: (activeTab === tab.toLowerCase() && page === "input") ? `2px solid ${COLORS.primary}` : "2px solid transparent",
+                color: (activeTab === tab.toLowerCase() && page === "input") ? COLORS.primary : COLORS.textDim,
+                cursor: "pointer",
+                fontSize: "1rem",
+                fontWeight: "700",
+                fontFamily: "'DM Sans', sans-serif",
+                transition: "all 0.2s"
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+
+          {/* Chat Tab - Only shows up as active when on the chat page */}
+          {page === "chat" && (
+            <button
+              style={{
+                padding: "0.75rem 0",
+                background: "none",
+                border: "none",
+                borderBottom: `2px solid ${COLORS.primary}`,
+                color: COLORS.primary,
+                cursor: "default",
+                fontSize: "1rem",
+                fontWeight: "700",
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Chat
+            </button>
+          )}
+        </div>
+
+        {/* Dynamic Content Rendering */}
+        {page === "input" && (
+          <>
+            {activeTab === "taste" && <InputPage onGenerate={handleGenerate} />}
+            {activeTab === "vocabulary" && <VocabularyTab />}
+            {activeTab === "sources" && <DataSourcesTab />}
+          </>
+        )}
+
         {page === "chat" && chatData && (
           <ChatPage
             sessionId={chatData.sessionId}

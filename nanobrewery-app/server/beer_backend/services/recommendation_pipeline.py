@@ -46,24 +46,45 @@ class RecommendationPipeline:
         clus_name    = classification["clus_name"]  
         style_simple  = classification["Style_simple"]
 
-        # Call get_beers_by_categories with exclude_beer_name parameter
+        # 1. Get more than 10 beers so we have 'backups' for any nan/Unknown rows
         beers = self._beers.get_beers_by_categories(
             clus_name=clus_name,
             style_simple=style_simple,
+            limit=20, # Explicitly ask for more
             exclude_beer_name=selected_beer_name
         )
         
-        beer_context = self._beers.format_for_prompt(beers)
+        # 2. Filter and build the list of exactly 10 valid names
+        valid_display_names = []
+        valid_beer_objects = [] # We need this for the LLM context later
+
+        for beer in beers:
+            # Use name_fixed as the primary source
+            name = beer.get('name_fixed') or beer.get('Name')
+            
+            # Skip if name is empty, nan, or Unknown
+            if not name or str(name).lower() in ['nan', 'unknown', 'none', '']:
+                continue
+                
+            valid_display_names.append(name)
+            valid_beer_objects.append(beer)
+            
+            # STOP as soon as we have 10
+            if len(valid_display_names) >= 10:
+                break
+
+        # 3. Create the numbered string for the intro message
+        beer_names_text = "\n".join([f"{i+1}. {name}" for i, name in enumerate(valid_display_names)])
+        
+        # 4. Use the filtered objects for the LLM context (so the LLM doesn't see nans either)
+        beer_context = self._beers.format_for_prompt(valid_beer_objects)
 
         session_id = str(uuid.uuid4())
         session = self._llm.start_session(session_id, beer_context)
         self._sessions[session_id] = session
+        
         intro_message = session.history[-1]["parts"][0]["text"]
-
-        # Append beer list to intro message
-        # beer_names = "\n".join([f"{i+1}. {_fix_encoding(beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])
-        beer_names = "\n".join([f"{i+1}. {beer.get('name_fixed', beer.get('Name', 'Unknown'))}" for i, beer in enumerate(beers[:10])])
-        intro_with_beers = f"{intro_message}\n\nYour recommended beers:\n{beer_names}"
+        intro_with_beers = f"{intro_message}\n\nYour recommended beers:\n{beer_names_text}"
 
         # Generate suggested questions as separate array
         if len(beers) >= 2:

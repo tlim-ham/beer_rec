@@ -62,25 +62,33 @@ def _fix_encoding(text: str) -> str:
 
 
 XLSX_PATH = str(Path(__file__).parent.parent.parent.parent / "data" / "Beer_data (1).xlsx")
-MAX_BEERS_PER_RECOMMENDATION = 10  # cap before sending to LLM
+MAX_BEERS_PER_RECOMMENDATION = 20  # cap before sending to LLM
 
 
 @lru_cache(maxsize=1)
 def _load_beers(xlsx_path: str) -> list[dict]:
-    """Load and cache the full beer list from XLSX."""
     path = Path(xlsx_path)
     if not path.exists():
         raise FileNotFoundError(f"Beer database not found at '{xlsx_path}'.")
+    
     df = pd.read_excel(path)
     
-    # Cap flavor values at 100 to prevent model errors
+    # --- STEP 1: DELETE GHOST ROWS ---
+    # This removes any row where the 'Name' column is empty/NaN.
+    # This prevents "Unknown" from appearing in your recommendation list.
+    df = df.dropna(subset=['Name'])
+    
+    # --- STEP 2: FILL REMAINING GAPS ---
+    # Now that the empty beers are gone, fill missing Descriptions/Styles with "Unknown"
+    df = df.fillna("Unknown")
+
+    # (Keep your flavor capping logic below this...)
     flavor_cols = ['Body', 'Alcohol', 'Bitter', 'Sweet', 'Sour', 'Salty', 'Fruits', 'Hoppy', 'Spices', 'Malty']
     for col in flavor_cols:
         if col in df.columns:
-            df[col] = df[col].clip(upper=100)
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).clip(upper=100)
     
     beers = df.to_dict(orient="records")
-    logger.info("Loaded %d beers from %s (flavor values capped at 100)", len(beers), xlsx_path)
     return beers
 
 
