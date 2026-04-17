@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Dockerfile.backend
+# FastAPI + XGBoost beer recommendation backend
+#
+# Build context: nanobrewery-app/
+# Build:  docker build -f Dockerfile.backend -t beer-backend .
+# Run:    docker run -p 8002:8002 --env-file .env beer-backend
+# ─────────────────────────────────────────────────────────────────────────────
+
+FROM python:3.11-slim
+
+# libgomp1 is required by XGBoost for OpenMP multi-threading support
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# /app mirrors the nanobrewery-app/ root that config.py expects as BASE_DIR
+# config.py resolves BASE_DIR as 3 levels above config.py:
+#   /app/server/beer_backend/config.py → /app
+WORKDIR /app
+
+# Install Python dependencies first (layer-cached separately from source)
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source and runtime assets
+COPY server/ ./server/
+COPY models/ ./models/
+COPY data/   ./data/
+
+# Set the working directory where uvicorn expects to resolve the package
+WORKDIR /app/server
+
+EXPOSE 8002
+
+# Use exec form so the process receives SIGTERM directly (clean ECS shutdown)
+CMD ["uvicorn", "beer_backend.main:app", "--host", "0.0.0.0", "--port", "8002"]

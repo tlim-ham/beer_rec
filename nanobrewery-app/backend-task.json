@@ -1,0 +1,31 @@
+{
+  "family": "beer-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::<YOUR_ACCOUNT_ID>:role/ecsTaskExecutionRole",
+  "containerDefinitions": [{
+    "name": "beer-backend",
+    "image": "<YOUR_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/beer-backend:latest",
+    "portMappings": [{"containerPort": 8002, "protocol": "tcp"}],
+    "secrets": [{
+      "name": "GEMINI_API_KEY",
+      "valueFrom": "<GEMINI_SECRET_ARN>"
+    }],
+    "environment": [
+      {"name": "HOST", "value": "0.0.0.0"},
+      {"name": "PORT", "value": "8002"},
+      {"name": "LOG_LEVEL", "value": "info"},
+      {"name": "ALLOWED_ORIGINS", "value": "[\"<YOUR_FRONTEND_URL>\"]"}
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/beer-backend",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  }]
+}

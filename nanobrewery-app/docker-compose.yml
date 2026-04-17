@@ -1,0 +1,50 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Local development / smoke-test stack
+#
+# Prerequisites:
+#   1. Copy .env.example → .env and fill in GEMINI_API_KEY
+#   2. docker compose up --build
+#
+# Frontend: http://localhost
+# Backend API: http://localhost:8002
+# API docs:    http://localhost:8002/docs
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: beer-backend:local
+    ports:
+      - "8002:8002"
+    env_file: .env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8002"
+      # Override ALLOWED_ORIGINS so the local frontend is permitted
+      ALLOWED_ORIGINS: '["http://localhost","http://localhost:80","http://localhost:8002"]'
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        # Vite bakes this URL into the JS bundle at build time.
+        # For local compose the browser hits the backend directly on port 8002.
+        VITE_API_BASE_URL: "http://localhost:8002"
+    image: beer-frontend:local
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy

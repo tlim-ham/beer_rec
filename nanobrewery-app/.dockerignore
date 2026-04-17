@@ -1,0 +1,27 @@
+# Node
+client/nano-beer/node_modules
+client/nano-beer/dist
+
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+**/*.egg-info
+**/dist-info
+
+# Environment / secrets — never copy these into an image
+.env
+*.env
+
+# Dev tooling
+**/.git
+**/.gitignore
+**/.DS_Store
+**/Thumbs.db
+
+# Docs (not needed at runtime)
+*.md
+DEPLOYMENT.md
+QUICKSTART.md
+STRUCTURE.md

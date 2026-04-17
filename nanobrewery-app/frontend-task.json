@@ -1,0 +1,21 @@
+{
+  "family": "beer-frontend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::<YOUR_ACCOUNT_ID>:role/ecsTaskExecutionRole",
+  "containerDefinitions": [{
+    "name": "beer-frontend",
+    "image": "<YOUR_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/beer-frontend:latest",
+    "portMappings": [{"containerPort": 80, "protocol": "tcp"}],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/beer-frontend",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  }]
+}
