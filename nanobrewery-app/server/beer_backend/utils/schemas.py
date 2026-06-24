@@ -57,9 +57,6 @@ class StartRecommendationResponse(BaseModel):
     Style_simple:   list[str]
     category_scores: dict[str, float]
     beers_found:     list[dict]
-    intro_message:   str
-    suggested_questions: list[str]
-    tokens_used:     int
 
 
 class ChatResponse(BaseModel):

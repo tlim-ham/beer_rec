@@ -44,8 +44,7 @@ app = FastAPI(
         "**Pipeline:**\n"
         "1. Classify flavour profile → beer categories (ML model)\n"
         "2. Fetch matching beers from the CSV database\n"
-        "3. Start a Gemini-powered chatbot session with the beer list as context\n"
-        "4. Support follow-up chat turns within a session"
+        "3. Return a ranked list of beer recommendations directly"
     ),
     version="1.0.0",
     docs_url="/docs",

@@ -7,15 +7,11 @@ FastAPI router for all beer recommendation endpoints.
 from fastapi import APIRouter, Depends, HTTPException, status
 import logging
 
-from ..services.recommendation_pipeline import RecommendationPipeline
 from ..services.beer_service import BeerService
-from ..services.llm_service import RateLimitError, BudgetExceededError
+from ..services.recommendation_pipeline import RecommendationPipeline
 from ..utils.schemas import (
     StartRecommendationRequest,
     StartRecommendationResponse,
-    ChatRequest,
-    ChatResponse,
-    SessionInfoResponse,
     BeerListResponse,
 )
 from ..dependencies import get_pipeline, get_beer_service
@@ -33,12 +29,10 @@ async def options_recommend():
 @router.post(
     "/recommend",
     response_model=StartRecommendationResponse,
-    summary="Start a new beer recommendation session",
+    summary="Generate beer recommendations",
     description=(
-        "Accepts a flavour profile, runs it through the classifier, "
-        "fetches matching beers from the database, and starts a Gemini chat "
-        "session. Returns the LLM's opening message and a session_id for "
-        "follow-up /chat calls."
+        "Accepts a flavour profile, runs it through the classifier and "
+        "fetches the top beer recommendations directly from the database."
     ),
 )
 async def start_recommendation(
@@ -50,12 +44,6 @@ async def start_recommendation(
             flavor_profile=body.flavor_profile.model_dump(),
             selected_beer_name=body.selected_beer_name,
         )
-    except RateLimitError as e:
-        logger.error(f"Rate limit error: {e}")
-        raise HTTPException(status_code=429, detail=str(e))
-    except BudgetExceededError as e:
-        logger.error(f"Budget exceeded error: {e}")
-        raise HTTPException(status_code=402, detail=str(e))
     except FileNotFoundError as e:
         logger.error(f"File not found error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -64,69 +52,6 @@ async def start_recommendation(
         raise HTTPException(status_code=500, detail=f"Pipeline error: {e}")
 
     return StartRecommendationResponse(**result)
-
-
-@router.options("/chat")
-async def options_chat():
-    """Handle CORS preflight requests for /chat endpoint."""
-    return {"message": "OK"}
-
-
-@router.post(
-    "/chat",
-    response_model=ChatResponse,
-    summary="Continue chatting within an existing recommendation session",
-)
-async def chat(
-    body: ChatRequest,
-    pipeline: RecommendationPipeline = Depends(get_pipeline),
-):
-    try:
-        result = pipeline.chat(
-            session_id=body.session_id,
-            user_message=body.message,
-        )
-    except RateLimitError as e:
-        raise HTTPException(status_code=429, detail=str(e))
-    except BudgetExceededError as e:
-        raise HTTPException(status_code=402, detail=str(e))
-    except KeyError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chat error: {e}")
-
-    return ChatResponse(**result)
-
-
-@router.get(
-    "/session/{session_id}",
-    response_model=SessionInfoResponse,
-    summary="Get metadata about an active session",
-)
-async def session_info(
-    session_id: str,
-    pipeline: RecommendationPipeline = Depends(get_pipeline),
-):
-    try:
-        info = pipeline.get_session_info(session_id)
-    except KeyError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    return SessionInfoResponse(**info)
-
-
-@router.delete(
-    "/session/{session_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="End and clean up a session",
-)
-async def end_session(
-    session_id: str,
-    pipeline: RecommendationPipeline = Depends(get_pipeline),
-):
-    found = pipeline.end_session(session_id)
-    if not found:
-        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
 
 
 @router.options("/beers")
