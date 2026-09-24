@@ -23,12 +23,8 @@ class Settings(BaseSettings):
         env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",  # tolerate stale keys (e.g. GEMINI_API_KEY) in old .env files
     )
-
-    # ------------------------------------------------------------------ #
-    # Optional Gemini API
-    # ------------------------------------------------------------------ #
-    GEMINI_API_KEY: str | None = None
 
     # ------------------------------------------------------------------ #
     # File paths

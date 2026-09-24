@@ -30,11 +30,6 @@ class StartRecommendationRequest(BaseModel):
     top_n_categories: int = Field(default=3, ge=1, le=5)
 
 
-class ChatRequest(BaseModel):
-    session_id: str = Field(..., min_length=1)
-    message: str = Field(..., min_length=1, max_length=1000)
-
-
 # ---------------------------------------------------------------------------
 # Responses
 # ---------------------------------------------------------------------------
@@ -57,19 +52,6 @@ class StartRecommendationResponse(BaseModel):
     Style_simple:   list[str]
     category_scores: dict[str, float]
     beers_found:     list[dict]
-
-
-class ChatResponse(BaseModel):
-    reply: str
-    tokens_used: int
-    over_budget: bool
-
-
-class SessionInfoResponse(BaseModel):
-    session_id: str
-    turns: int
-    tokens_used: int
-    over_budget: bool
 
 
 class BeerOption(BaseModel):

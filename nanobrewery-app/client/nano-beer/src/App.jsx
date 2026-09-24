@@ -254,7 +254,11 @@ function InputPage({ onGenerate }) {
 
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
-    onGenerate(data.session_id, data.intro_message, data.suggested_questions);
+    onGenerate({
+      beers: data.beers_found,
+      clusName: data.clus_name,
+      styleSimple: data.Style_simple,
+    });
   } catch (error) {
     console.error('Error generating recommendations:', error);
     alert('Failed to generate recommendations. Please try again.');
@@ -421,302 +425,121 @@ function InputPage({ onGenerate }) {
   );
 }
 
-function ChatPage({ sessionId, initialMessage, suggestedQuestions, onBack }) {
-  const [messages, setMessages] = useState([{ role: 'assistant', content: initialMessage }]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
+function clean(value) {
+  if (value === null || value === undefined) return null;
+  const s = String(value).trim();
+  return !s || ["nan", "unknown", "none"].includes(s.toLowerCase()) ? null : s;
+}
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+function formatIbu(beer) {
+  const min = clean(beer["Min.IBU"]);
+  const max = clean(beer["Max.IBU"]);
+  if (min && max) return `${min}–${max} IBU`;
+  if (min || max) return `${min || max} IBU`;
+  return null;
+}
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    // Scroll to top when chat page first loads
-    const chatContainer = document.querySelector('[data-chat-container]');
-    if (chatContainer) {
-      chatContainer.scrollTop = 0;
-    }
-  }, [sessionId]); // Run only when sessionId changes (new chat)
-
-  async function handleSendMessage() {
-    if (!inputMessage.trim() || isLoading) return;
-
-    const userMessage = inputMessage.trim();
-    setInputMessage('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE}/api/v1/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId, message: userMessage }),
-      });
-
-      if (response.status === 429) {
-        const error = await response.json();
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: `⏳ ${error.detail}\n\nTake a breath and try again in a moment!`
-        }]);
-        return;
-      }
-
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.'
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  function handleKeyPress(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  }
+function BeerCard({ beer, rank }) {
+  const name = clean(beer.name_fixed) || clean(beer.Name) || "Unnamed beer";
+  const brewery = clean(beer.Brewery);
+  const style = clean(beer.Style);
+  const abv = clean(beer.ABV) ? `${beer.ABV}%` : null;
+  const ibu = formatIbu(beer);
+  const meta = [abv, ibu].filter(Boolean).join(" • ");
+  const details = [["Brewery", brewery], ["Style", style], ["ABV", abv], ["IBU", ibu]].filter(([, v]) => v);
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-      {/* Header
-      <div style={{
-        display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem",
-        padding: "1rem", background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "10px"
-      }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: "0.5rem 1rem", 
-            background: "none", 
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: "6px", 
-            color: COLORS.textDim, 
-            cursor: "pointer",
-            fontSize: "0.9rem", 
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: "600"
-          }}
-          onMouseOver={e => e.currentTarget.style.color = COLORS.primary}
-          onMouseOut={e => e.currentTarget.style.color = COLORS.textDim}
-        >
-          ← Back to Input
-        </button>
+    <div style={{
+      padding: "1.5rem",
+      background: COLORS.bgAlt,
+      border: `1px solid ${COLORS.border}`,
+      borderRadius: "16px",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start" }}>
         <div>
-          <h2 style={{ margin: 0, color: COLORS.primary, fontFamily: "'DM Sans', sans-serif", fontSize: "1.5rem", fontWeight: "700" }}>
-            Beer Recommendations Chat
+          <div style={{ fontSize: "0.8rem", letterSpacing: "0.2em", textTransform: "uppercase", color: COLORS.primary, fontWeight: "700", marginBottom: "0.6rem" }}>
+            Recommendation #{rank}
+          </div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "700", color: COLORS.text, lineHeight: 1.2 }}>{name}</div>
+          {brewery && <div style={{ fontSize: "0.95rem", color: COLORS.textDim, marginTop: "0.4rem" }}>{brewery}</div>}
+        </div>
+        <div style={{ textAlign: "right", flexShrink: 0, maxWidth: "45%" }}>
+          {style && <div style={{ fontSize: "1rem", fontWeight: "700", color: COLORS.primary }}>{style}</div>}
+          {meta && <div style={{ fontSize: "0.8rem", color: COLORS.textMuted, marginTop: "0.3rem" }}>{meta}</div>}
+        </div>
+      </div>
+
+      <div style={{ fontSize: "1rem", fontWeight: "700", color: COLORS.primary, margin: "1.3rem 0 0.8rem" }}>
+        Recommendation : {name}
+      </div>
+      {details.map(([label, value]) => (
+        <div key={label} style={{ fontSize: "0.95rem", color: COLORS.text, lineHeight: 1.7 }}>
+          <span style={{ color: COLORS.textDim, fontWeight: "700" }}>{label}:</span> {value}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ResultsPage({ results, onBack }) {
+  const beers = results.beers || [];
+  const cluster = results.clusName?.[0];
+  const style = results.styleSimple?.[0];
+
+  useEffect(() => { window.scrollTo(0, 0); }, [results]);
+
+  return (
+    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "2rem", flexWrap: "wrap", marginBottom: "2.5rem" }}>
+        <div style={{ flex: "1 1 500px" }}>
+          <button
+            onClick={onBack}
+            style={{
+              padding: "0.7rem 1.2rem",
+              background: "none",
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: "8px",
+              color: COLORS.textMuted,
+              cursor: "pointer",
+              fontSize: "0.9rem",
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: "700",
+              marginBottom: "1.2rem",
+              transition: "color 0.2s, border-color 0.2s",
+            }}
+            onMouseOver={e => { e.currentTarget.style.color = COLORS.primary; e.currentTarget.style.borderColor = COLORS.primary; }}
+            onMouseOut={e => { e.currentTarget.style.color = COLORS.textMuted; e.currentTarget.style.borderColor = COLORS.border; }}
+          >
+            ← New recommendation
+          </button>
+          <h2 style={{ margin: "0 0 1rem", color: COLORS.primary, fontSize: "2.6rem", fontWeight: "700", letterSpacing: "-0.01em" }}>
+            Top {beers.length} Beer Recommendations
           </h2>
-          <p style={{ margin: "0.25rem 0 0 0", color: COLORS.textMuted, fontSize: "0.85rem", fontFamily: "'DM Sans', sans-serif" }}>
-            Ask questions about your beer recommendations!
+          <p style={{ margin: 0, color: COLORS.textMuted, fontSize: "1.05rem", lineHeight: 1.7, maxWidth: "680px" }}>
+            Based on your taste profile, these beers are the best available matches from our brewery catalogue. Scroll through the list to explore each selection.
           </p>
         </div>
-      </div> */}
 
-      {/* Chat Messages */}
-      <div 
-        data-chat-container
-        style={{
-          height: "60vh", overflowY: "auto", padding: "1rem",
-          background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`,
-          borderRadius: "10px", marginBottom: "1rem"
-        }}>
-        {messages.map((message, index) => (
-          <div key={index} style={{
-            marginBottom: "1.5rem", display: "flex",
-            justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start'
-          }}>
-            <div style={{
-              maxWidth: "70%", padding: "1rem 1.2rem",
-              background: message.role === 'user' ? COLORS.primary : COLORS.bgAlt,
-              color: message.role === 'user' ? "#0a0600" : COLORS.text,
-              borderRadius: "15px",
-              border: message.role === 'user' ? "none" : `1px solid ${COLORS.border}`,
-              fontSize: "0.95rem", 
-              lineHeight: 1.5, 
-              whiteSpace: "pre-wrap",
-              fontFamily: "'DM Sans', sans-serif"
-            }}>
-              {message.content}
+        {(cluster || style) && (
+          <div style={{ padding: "1.3rem 1.5rem", background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "12px", minWidth: "240px" }}>
+            <div style={{ fontSize: "0.75rem", letterSpacing: "0.2em", textTransform: "uppercase", color: COLORS.textDim, fontWeight: "700", marginBottom: "0.9rem" }}>
+              Predicted Profile
             </div>
-          </div>
-        ))}
-
-        {isLoading && (
-          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "1.5rem" }}>
-            <div style={{
-              padding: "1rem 1.2rem", 
-              background: COLORS.bgAlt,
-              border: `1px solid ${COLORS.border}`, 
-              borderRadius: "15px",
-              color: COLORS.textMuted, 
-              fontSize: "0.95rem",
-              fontFamily: "'DM Sans', sans-serif"
-            }}>
-              Thinking...
-            </div>
+            {cluster && <div style={{ fontSize: "1rem", color: COLORS.text, marginBottom: "0.4rem" }}><strong>Cluster:</strong> {cluster}</div>}
+            {style && <div style={{ fontSize: "1rem", color: COLORS.text }}><strong>Style:</strong> {style}</div>}
           </div>
         )}
-        
-        {/* Suggested Questions - Quick Reply Buttons */}
-        {!isLoading && suggestedQuestions && suggestedQuestions.length > 0 && messages.length === 1 && (
-          <div style={{
-            marginBottom: "1.5rem", display: "flex",
-            justifyContent: "flex-start"
-          }}>
-            <div style={{
-              display: "flex", flexWrap: "wrap", gap: "0.5rem", maxWidth: "85%"
-            }}>
-              {suggestedQuestions.map((question, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setInputMessage(question);
-                    setTimeout(() => handleSendMessage(), 100);
-                  }}
-                  style={{
-                    padding: "0.6rem 0.9rem", 
-                    background: COLORS.primary,
-                    border: `2px solid ${COLORS.primaryDark}`, 
-                    borderRadius: "20px",
-                    color: "#0a0600", 
-                    fontSize: "0.85rem", 
-                    cursor: "pointer",
-                    fontFamily: "'DM Sans', sans-serif", 
-                    fontWeight: "600", 
-                    transition: "all 0.2s ease",
-                    boxShadow: `0 2px 6px rgba(255,217,102,0.3)`
-                  }}
-                  onMouseOver={e => {
-                    e.currentTarget.style.background = COLORS.primaryDark;
-                    e.currentTarget.style.borderColor = COLORS.primary;
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = `0 4px 10px rgba(255,217,102,0.5)`;
-                  }}
-                  onMouseOut={e => {
-                    e.currentTarget.style.background = COLORS.primary;
-                    e.currentTarget.style.borderColor = COLORS.primaryDark;
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = `0 2px 6px rgba(255,217,102,0.3)`;
-                  }}
-                >
-                  {question}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div style={{
-        display: "flex", gap: "0.5rem", padding: "1rem",
-        background: COLORS.bgAlt, border: `1px solid ${COLORS.border}`, borderRadius: "10px"
-      }}>
-        <textarea
-          value={inputMessage}
-          onChange={e => setInputMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Ask about your beer recommendations..."
-          style={{
-            flex: 1, minHeight: "50px", maxHeight: "120px",
-            background: COLORS.bg, border: `1px solid ${COLORS.border}`,
-            borderRadius: "8px", color: COLORS.text, padding: "0.75rem",
-            fontSize: "0.95rem", fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none"
-          }}
-          disabled={isLoading}
-        />
-        <button
-          onClick={handleSendMessage}
-          disabled={!inputMessage.trim() || isLoading}
-          style={{
-            padding: "0.75rem 1.5rem",
-            background: isLoading || !inputMessage.trim() ? COLORS.border : `linear-gradient(135deg, ${COLORS.primaryDark}, ${COLORS.primary})`,
-            border: "none", 
-            borderRadius: "8px",
-            color: isLoading || !inputMessage.trim() ? COLORS.textDim : "#0a0600",
-            fontWeight: "600",
-            cursor: isLoading || !inputMessage.trim() ? "not-allowed" : "pointer",
-            fontSize: "0.95rem", 
-            fontFamily: "'DM Sans', sans-serif", 
-            alignSelf: "flex-end"
-          }}
-        >
-          {isLoading ? "..." : "Send"}
-        </button>
-      </div>
-
-      {/* Permanent Disclaimer + Home Button */}
-<div style={{
-  marginTop: "1rem",
-  padding: "0.75rem",
-  background: COLORS.bgAlt,
-  border: `1px solid ${COLORS.border}`,
-  borderRadius: "8px",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
-  gap: "1rem",
-  textAlign: "center"
-}}>
-  <p style={{
-    margin: 0,
-    color: COLORS.textMuted,
-    fontSize: "0.8rem",
-    fontStyle: "italic",
-    lineHeight: 1.4,
-    fontFamily: "'DM Sans', sans-serif"
-  }}>
-    Hoppy can make mistakes. For the most accurate information, please double-check with official sources.
-  </p>
-  <button
-  onClick={onBack}
-  style={{
-    padding: "0.5rem 1rem",
-    background: COLORS.primary,
-    border: "none",
-    borderRadius: "6px",
-    color: "#0a0600",
-    cursor: "pointer",
-    fontSize: "0.85rem",
-    fontFamily: "'DM Sans', sans-serif",
-    fontWeight: "600",
-    whiteSpace: "nowrap",
-    transition: "all 0.2s ease",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "0.5rem"
-  }}
-  onMouseOver={e => {
-    e.currentTarget.style.background = COLORS.primaryDark;
-    e.currentTarget.style.transform = "scale(1.05)";
-  }}
-  onMouseOut={e => {
-    e.currentTarget.style.background = COLORS.primary;
-    e.currentTarget.style.transform = "scale(1)";
-  }}
->
-  Home
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-  </svg>
-</button>
-</div>
+      {beers.length === 0 ? (
+        <p style={{ color: COLORS.textMuted, fontStyle: "italic" }}>
+          No matching beers found. Try adjusting your taste profile.
+        </p>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.5rem" }}>
+          {beers.map((beer, i) => <BeerCard key={`${beer.Name}-${i}`} beer={beer} rank={i + 1} />)}
+        </div>
+      )}
     </div>
   );
 }
@@ -992,13 +815,18 @@ function DataSourcesTab() {
   const sources = [
     {
       name: "OpenBeerDB",
-      description: "Primary brewery and beer metadata, including style classifications and regional data.",
+      description: "Primary brewery and beer metadata, including style classifications and flavor profiles.",
       link: "https://openbeerdb.com/"
     },
     {
-      name: "Gemini 1.5 Flash",
-      description: "Generative AI used to synthesize flavor profiles and provide interactive chat guidance.",
-      link: "https://deepmind.google/technologies/gemini/"
+      name: "R&ID Innovation Award",
+      description: "This project was made possible through the generous support and funding provided by Hamilton College's Research & Instructional Design team.",
+      link: "https://www.hamilton.edu/"
+    },
+    {
+      name: "LITS Data Science Tutors",
+      description: "An original project designed and built by the LITS Data Science Tutors.",
+      link: "https://www.hamilton.edu/"
     }
   ];
 
@@ -1006,7 +834,7 @@ function DataSourcesTab() {
     <div style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "1rem" }}>
       <SectionLabel>Information & Attribution</SectionLabel>
       <p style={{ color: COLORS.textMuted, fontSize: "0.95rem", marginBottom: "2rem", lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
-        Hoppy leverages the following data repositories and artificial intelligence models to provide recommendations and educational insights:
+        Hoppy leverages the following data repositories and institutional support to provide beer recommendations and educational insights:
       </p>
       
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
@@ -1036,7 +864,7 @@ function DataSourcesTab() {
               alignItems: "center",
               gap: "0.4rem"
             }}>
-              Explore Data Source ↗
+              Explore Source ↗
             </a>
           </div>
         ))}
@@ -1048,7 +876,7 @@ function DataSourcesTab() {
 export default function App() {
   const [page, setPage] = useState("input");
   const [activeTab, setActiveTab] = useState("taste"); 
-  const [chatData, setChatData] = useState(null);
+  const [results, setResults] = useState(null);
   const [disclaimersAccepted, setDisclaimersAccepted] = useState(false);
 
   // Handle browser back button
@@ -1056,10 +884,10 @@ export default function App() {
     const handlePopState = (event) => {
       if (event.state && event.state.page) {
         setPage(event.state.page);
-        setChatData(event.state.chatData || null);
+        setResults(event.state.results || null);
       } else {
         setPage("input");
-        setChatData(null);
+        setResults(null);
         setActiveTab("taste");
       }
     };
@@ -1072,14 +900,12 @@ export default function App() {
     setDisclaimersAccepted(true);
   }
 
-  function handleGenerate(sessionId, llmMessage, suggestedQuestions) {
-    const newChatData = { sessionId, initialMessage: llmMessage, suggestedQuestions };
-    setChatData(newChatData);
-    setPage("chat");
-    setActiveTab("chat"); // Switch focus to the new chat
-    
+  function handleGenerate(newResults) {
+    setResults(newResults);
+    setPage("results");
+
     window.history.pushState(
-      { page: "chat", chatData: newChatData },
+      { page: "results", results: newResults },
       "",
       window.location.href
     );
@@ -1088,8 +914,8 @@ export default function App() {
   function handleBackToInput() {
     setPage("input");
     setActiveTab("taste");
-    setChatData(null);
-    if (window.history.state && window.history.state.page === "chat") {
+    setResults(null);
+    if (window.history.state && window.history.state.page === "results") {
       window.history.back();
     }
   }
@@ -1156,24 +982,6 @@ export default function App() {
             </button>
           ))}
 
-          {/* Chat Tab - Only shows up as active when on the chat page */}
-          {page === "chat" && (
-            <button
-              style={{
-                padding: "0.75rem 0",
-                background: "none",
-                border: "none",
-                borderBottom: `2px solid ${COLORS.primary}`,
-                color: COLORS.primary,
-                cursor: "default",
-                fontSize: "1rem",
-                fontWeight: "700",
-                fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              Chat
-            </button>
-          )}
         </div>
 
         {/* Dynamic Content Rendering */}
@@ -1185,13 +993,8 @@ export default function App() {
           </>
         )}
 
-        {page === "chat" && chatData && (
-          <ChatPage
-            sessionId={chatData.sessionId}
-            initialMessage={chatData.initialMessage}
-            suggestedQuestions={chatData.suggestedQuestions}
-            onBack={handleBackToInput}
-          />
+        {page === "results" && results && (
+          <ResultsPage results={results} onBack={handleBackToInput} />
         )}
       </main>
     </div>

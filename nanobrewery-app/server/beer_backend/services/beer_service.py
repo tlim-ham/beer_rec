@@ -62,7 +62,7 @@ def _fix_encoding(text: str) -> str:
 
 
 XLSX_PATH = str(Path(__file__).parent.parent.parent.parent / "data" / "Beer_data (1).xlsx")
-MAX_BEERS_PER_RECOMMENDATION = 20  # cap before sending to LLM
+MAX_BEERS_PER_RECOMMENDATION = 20
 
 
 @lru_cache(maxsize=1)
@@ -154,30 +154,6 @@ class BeerService:
             len(results), clus_name, style_simple, exclude_name or "none",
         )
         return results
-    def format_for_prompt(self, beers: list[dict]) -> str:
-        """
-        Serialise a list of beer dicts into a compact, readable string
-        suitable for inclusion in an LLM prompt.
-        """
-        if not beers:
-            return "No beers found."
-
-        lines = []
-        for b in beers:
-            ibu_range = f"{b.get('Min.IBU', '?')}-{b.get('Max.IBU', '?')}"
-            flavor_summary = (
-                f"Bitter={b.get('Bitter', 0)}, Sweet={b.get('Sweet', 0)}, "
-                f"Sour={b.get('Sour', 0)}, Hoppy={b.get('Hoppy', 0)}, "
-                f"Malty={b.get('Malty', 0)}, Fruits={b.get('Fruits', 0)}, "
-                f"Spices={b.get('Spices', 0)}"
-            )
-            lines.append(
-                f"- {str(b.get('name_fixed', b.get('Name', 'Unknown')))} by {_fix_encoding(str(b.get('Brewery', 'Unknown Brewery')))} "
-                f"({b.get('Style', '?')}, {b.get('ABV', '?')}% ABV, IBU {ibu_range}): "
-                f"{str(b.get('Description', '')).strip()[:200]} "
-                f"[{flavor_summary}]"
-            )
-        return "\n".join(lines)
 
     def get_all_categories(self) -> list[str]:
         """Return the distinct list of categories present in the database."""

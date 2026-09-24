@@ -47,7 +47,7 @@ class RecommendationPipeline:
         
         # 2. Filter and build the list of exactly 10 valid names
         valid_display_names = []
-        valid_beer_objects = [] # We need this for the LLM context later
+        valid_beer_objects = []
 
         for beer in beers:
             # Use name_fixed as the primary source
@@ -63,9 +63,6 @@ class RecommendationPipeline:
             # STOP as soon as we have 10
             if len(valid_display_names) >= 10:
                 break
-
-        # 3. Create the numbered string for the intro message
-        beer_names_text = "\n".join([f"{i+1}. {name}" for i, name in enumerate(valid_display_names)])
 
         session_id = str(uuid.uuid4())
         return {

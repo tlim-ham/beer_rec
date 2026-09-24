@@ -9,10 +9,6 @@
     "name": "beer-backend",
     "image": "<YOUR_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/beer-backend:latest",
     "portMappings": [{"containerPort": 8002, "protocol": "tcp"}],
-    "secrets": [{
-      "name": "GEMINI_API_KEY",
-      "valueFrom": "<GEMINI_SECRET_ARN>"
-    }],
     "environment": [
       {"name": "HOST", "value": "0.0.0.0"},
       {"name": "PORT", "value": "8002"},

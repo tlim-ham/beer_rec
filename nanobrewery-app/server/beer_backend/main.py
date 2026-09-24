@@ -21,8 +21,6 @@ from .routes.recommendation import router as recommendation_router
 from .dependencies import get_model_service, get_beer_service
 from .utils.schemas import HealthResponse
 
-# print("API KEY LOADED:", settings.GEMINI_API_KEY[:8], "...")
-
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
